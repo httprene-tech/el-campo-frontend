@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- SEO -->
+    <title>El Campo - Granja Avícola</title>
+    <meta name="description" content="Sistema de control financiero para granja de gallinas ponedoras. Gestiona gastos, proyectos, documentos y más." />
+    <meta name="keywords" content="granja, avícola, ponedoras, gallinas, finanzas, control, gastos" />
+    <meta name="author" content="El Campo" />
+    
+    <!-- PWA -->
+    <link rel="icon" type="image/png" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <meta name="theme-color" content="#059669" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="El Campo" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="El Campo - Granja Avícola" />
+    <meta property="og:description" content="Sistema de control financiero para granja de gallinas ponedoras" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/pwa-512x512.png" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Loading screen mientras carga React -->
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);">
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: linear-gradient(135deg, #059669, #0d9488); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="12" rx="6" ry="8"/>
+            </svg>
+          </div>
+          <p style="color: #059669; font-family: system-ui; font-weight: 500;">Cargando...</p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
