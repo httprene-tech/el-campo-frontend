@@ -9,13 +9,13 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         name: 'El Campo - Granja Avícola',
         short_name: 'El Campo',
         description: 'Sistema de control financiero para granja de gallinas ponedoras',
         theme_color: '#059669',
-        background_color: '#f9fafb',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -26,19 +26,13 @@ export default defineConfig({
             src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'web-app-manifest-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
+            purpose: 'any maskable'
           }
         ],
         shortcuts: [

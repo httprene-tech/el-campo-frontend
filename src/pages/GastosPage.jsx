@@ -195,7 +195,73 @@ const GastosPage = () => {
 
       {/* Lista de gastos */}
       <Card padding="none">
-        <div className="overflow-x-auto">
+        {/* Mobile View (Cards) */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {gastosFiltrados.length > 0 ? (
+            gastosFiltrados.map((gasto) => (
+              <div key={gasto.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-xs font-medium text-gray-500 block mb-1">
+                      {new Date(gasto.fecha).toLocaleDateString('es-BO', { 
+                        weekday: 'short', 
+                        day: 'numeric', 
+                        month: 'short' 
+                      })}
+                    </span>
+                    <p className="font-semibold text-gray-900">{gasto.descripcion}</p>
+                  </div>
+                  <span className="font-bold text-gray-900 text-lg">
+                    {Number(gasto.monto).toLocaleString('es-BO')} Bs
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 font-medium">
+                    <Tag className="w-3 h-3" />
+                    {gasto.categoria_nombre}
+                  </span>
+                  
+                  {gasto.es_retroactivo && (
+                    <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-md font-medium">
+                      Retroactivo
+                    </span>
+                  )}
+                  
+                  {gasto.imagen_comprobante && (
+                    <span className="text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-md font-medium flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3" />
+                      Foto
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">
+                    {gasto.metodo_pago}
+                  </span>
+                  
+                  {canRegister() && (
+                    <button
+                      onClick={() => handleDelete(gasto.id)}
+                      className="p-2 -mr-2 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+             <div className="p-8 text-center">
+              <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No hay gastos registrados</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
