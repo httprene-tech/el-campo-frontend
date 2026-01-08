@@ -16,6 +16,22 @@ import {
 } from 'lucide-react';
 
 const GaleriaPage = () => {
+  // Helper para resolver URLs de imágenes
+  const getMediaUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+    
+    // Obtener base URL de la API (ej: https://api.midominio.com/api)
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    // Remover /api al final para obtener la raíz (ej: https://api.midominio.com)
+    const rootUrl = apiBase.replace(/\/api\/?$/, '');
+    
+    // Asegurar que el path empiece con /
+    const path = url.startsWith('/') ? url : `/${url}`;
+    
+    return `${rootUrl}${path}`;
+  };
+
   const [albumes, setAlbumes] = useState([]);
   const [albumActivo, setAlbumActivo] = useState(null);
   const [fotos, setFotos] = useState([]);
@@ -201,7 +217,7 @@ const GaleriaPage = () => {
               <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
                 {album.portada ? (
                   <img 
-                    src={album.portada} 
+                    src={getMediaUrl(album.portada)} 
                     alt={album.nombre}
                     className="w-full h-full object-cover"
                   />
