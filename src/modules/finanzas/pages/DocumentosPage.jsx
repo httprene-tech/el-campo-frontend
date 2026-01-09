@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { carpetasAPI, documentosAPI } from '../api';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../components/common';
+import { carpetasAPI, documentosAPI } from '../../../api';
+import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import {
   Plus,
   FileText,

@@ -37,11 +37,13 @@ const Button = ({
       disabled={isDisabled}
       className={`
         inline-flex items-center justify-center gap-2 font-medium rounded-xl
-        transition-all duration-200 
+        transition-all duration-200 ease-out
+        touch-manipulation
+        will-change-transform
         ${variants[variant]}
         ${sizes[size]}
         ${fullWidth ? 'w-full' : ''}
-        ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'}
+        ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.97] hover:scale-[1.02]'}
         ${className}
       `}
     >

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { proveedoresAPI } from '../api';
-import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../components/common';
+import { proveedoresAPI } from '../../../api';
+import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
 import {
   Plus,
   Users,

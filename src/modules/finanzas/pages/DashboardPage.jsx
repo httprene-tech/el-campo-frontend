@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useProyecto } from '../context/ProyectoContext';
-import { useAuth } from '../context/AuthContext';
-import { gastosAPI, categoriasAPI } from '../api';
-import { Card } from '../components/common';
+import React from 'react';
+import { useProyecto } from '../../../context/ProyectoContext';
+import { useAuth } from '../../../context/AuthContext';
+import { useGastos, useCategorias, useResumenMensualGastos } from '../../../hooks/queries/finanzas';
+import { Card, LoadingSpinner } from '../../../components/common';
 import {
   AreaChart,
   Area,
@@ -22,57 +22,26 @@ import {
   Egg,
   Loader2,
 } from 'lucide-react';
+import { formatCurrency, formatDateShort } from '../../../utils/formatters';
+import { CHART_COLORS } from '../../../utils/constants';
 
 const DashboardPage = () => {
   const { proyectoActivo, loading: proyectoLoading } = useProyecto();
   const { user } = useAuth();
-  const [gastosRecientes, setGastosRecientes] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [resumenMensual, setResumenMensual] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [cargado, setCargado] = useState(false);
+  
+  // React Query hooks
+  const { data: gastosData, isLoading: gastosLoading } = useGastos(
+    proyectoActivo ? { proyecto: proyectoActivo.id, page_size: 5 } : {}
+  );
+  const { data: categorias = [] } = useCategorias();
+  const { data: resumenMensual = [] } = useResumenMensualGastos(proyectoActivo?.id);
 
-  useEffect(() => {
-    if (proyectoActivo && !cargado) {
-      cargarDatos();
-    }
-  }, [proyectoActivo]);
-
-  const cargarDatos = async () => {
-    try {
-      setLoading(true);
-      const [gastosRes, categoriasRes, resumenRes] = await Promise.all([
-        gastosAPI.getAll({ proyecto: proyectoActivo.id }),
-        categoriasAPI.getAll(),
-        gastosAPI.resumenMensual(proyectoActivo.id),
-      ]);
-      
-      setGastosRecientes(gastosRes.data.slice(0, 5));
-      setCategorias(categoriasRes.data);
-      setResumenMensual(resumenRes.data.slice(0, 6));
-      setCargado(true);
-    } catch (error) {
-      console.error('Error al cargar datos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Colores más suaves para el gráfico de pie
-  const COLORS = ['#6b7280', '#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6', '#f9fafb'];
-
-  // Datos para gráfico de gastos por categoría
-  const datosCategorias = categorias.slice(0, 6).map((cat, i) => ({
-    name: cat.nombre,
-    value: cat.gastos?.length || 1,
-    color: COLORS[i % COLORS.length],
-  }));
-
-  // Datos para gráfico de área (resumen mensual)
-  const datosAreaChart = resumenMensual.map(mes => ({
-    mes: new Date(mes.mes).toLocaleDateString('es-BO', { month: 'short' }),
-    total: Number(mes.total),
-  })).reverse();
+  // Extraer datos de gastos (puede ser array o paginado)
+  const gastosRecientes = React.useMemo(() => {
+    if (!gastosData) return [];
+    const allGastos = gastosData.pages?.flat() || gastosData || [];
+    return Array.isArray(allGastos) ? allGastos.slice(0, 5) : [];
+  }, [gastosData]);
 
   // Sin proyecto activo
   if (proyectoLoading) {
@@ -100,6 +69,18 @@ const DashboardPage = () => {
   const gastado = Number(proyectoActivo.total_gastado) || 0;
   const presupuesto = Number(proyectoActivo.presupuesto_objetivo) || 0;
 
+  // Datos para gráficos
+  const datosCategorias = categorias.slice(0, 6).map((cat, i) => ({
+    name: cat.nombre,
+    value: cat.gastos?.length || 1,
+    color: CHART_COLORS[i % CHART_COLORS.length],
+  }));
+
+  const datosAreaChart = (resumenMensual || []).slice(0, 6).map(mes => ({
+    mes: new Date(mes.mes).toLocaleDateString('es-BO', { month: 'short' }),
+    total: Number(mes.total),
+  })).reverse();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -114,13 +95,12 @@ const DashboardPage = () => {
 
       {/* Cards de resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Presupuesto Total */}
         <Card>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Presupuesto</p>
               <p className="text-xl font-bold text-gray-900 mt-1">
-                {presupuesto.toLocaleString('es-BO')} Bs
+                {formatCurrency(presupuesto)}
               </p>
               <p className="text-xs text-gray-400 mt-1">Crédito bancario</p>
             </div>
@@ -130,13 +110,12 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        {/* Total Gastado */}
         <Card>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Gastado</p>
               <p className="text-xl font-bold text-gray-900 mt-1">
-                {gastado.toLocaleString('es-BO')} Bs
+                {formatCurrency(gastado)}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <ArrowUpRight className="w-3 h-3 text-red-500" />
@@ -149,13 +128,12 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        {/* Saldo Disponible */}
         <Card>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Disponible</p>
               <p className={`text-xl font-bold mt-1 ${saldo > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {saldo.toLocaleString('es-BO')} Bs
+                {formatCurrency(saldo)}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <ArrowDownRight className="w-3 h-3 text-green-500" />
@@ -168,7 +146,6 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        {/* Total Gastos */}
         <Card>
           <div className="flex items-start justify-between">
             <div>
@@ -203,14 +180,13 @@ const DashboardPage = () => {
         </div>
         <div className="flex justify-between mt-2 text-xs text-gray-400">
           <span>0 Bs</span>
-          <span>{presupuesto.toLocaleString('es-BO')} Bs</span>
+          <span>{formatCurrency(presupuesto)}</span>
         </div>
       </Card>
 
-      {/* Gráficos - Solo mostrar si hay datos */}
+      {/* Gráficos */}
       {(datosAreaChart.length > 0 || datosCategorias.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Gráfico de tendencia */}
           <Card padding="none" className="lg:col-span-2">
             <div className="p-4 border-b border-gray-100">
               <h3 className="font-medium text-gray-900">Tendencia de Gastos</h3>
@@ -231,7 +207,7 @@ const DashboardPage = () => {
                         border: '1px solid #e5e7eb', 
                         borderRadius: '8px',
                       }}
-                      formatter={(value) => [`${Number(value).toLocaleString('es-BO')} Bs`, 'Total']}
+                      formatter={(value) => [formatCurrency(value), 'Total']}
                     />
                     <Area 
                       type="monotone" 
@@ -251,7 +227,6 @@ const DashboardPage = () => {
             </div>
           </Card>
 
-          {/* Distribución por categoría */}
           <Card padding="none">
             <div className="p-4 border-b border-gray-100">
               <h3 className="font-medium text-gray-900">Por Categoría</h3>
@@ -300,7 +275,7 @@ const DashboardPage = () => {
           <h3 className="font-medium text-gray-900">Gastos Recientes</h3>
         </div>
         <div className="divide-y divide-gray-50">
-          {loading ? (
+          {gastosLoading ? (
             <div className="p-6 text-center">
               <Loader2 className="w-5 h-5 text-gray-400 animate-spin mx-auto" />
             </div>
@@ -314,10 +289,10 @@ const DashboardPage = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">
-                      -{Number(gasto.monto).toLocaleString('es-BO')} Bs
+                      -{formatCurrency(gasto.monto)}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {new Date(gasto.fecha).toLocaleDateString('es-BO')}
+                      {formatDateShort(gasto.fecha)}
                     </p>
                   </div>
                 </div>

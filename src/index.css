@@ -24,11 +24,29 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Optimización de rendimiento */
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f9fafb;
+  /* Mejora de rendimiento */
+  will-change: scroll-position;
+  overscroll-behavior-y: none;
+}
+
+/* Optimización de scroll suave */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Touch optimization */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ============================================================================
@@ -38,29 +56,35 @@ body {
 /* Slide up - para toasts y modales */
 @keyframes slide-up {
   from { 
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
     opacity: 0;
   }
   to { 
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
     opacity: 1;
   }
 }
 
-/* Fade in suave */
+/* Fade in suave - optimizado con GPU */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  to { 
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
-/* Scale in - para modales y cards */
+/* Scale in - para modales y cards - GPU accelerated */
 @keyframes scale-in {
   from { 
-    transform: scale(0.95);
+    transform: scale3d(0.95, 0.95, 1);
     opacity: 0;
   }
   to { 
-    transform: scale(1);
+    transform: scale3d(1, 1, 1);
     opacity: 1;
   }
 }
@@ -108,18 +132,21 @@ body {
 }
 
 /* ============================================================================
-   CLASES DE ANIMACIÓN
+   CLASES DE ANIMACIÓN - Optimizadas con GPU
    ============================================================================ */
 .animate-slide-up {
   animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.2s ease-out;
+  will-change: opacity;
 }
 
 .animate-scale-in {
-  animation: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
 .animate-pulse-soft {
@@ -148,15 +175,45 @@ body {
    EFECTOS Y UTILIDADES
    ============================================================================ */
 
-/* Optimización de tap en móvil */
+/* Optimización de tap en móvil y rendimiento */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* GPU acceleration */
+/* Mejora de rendimiento para elementos con transiciones */
+[class*="transition"], [class*="animate"] {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Optimización de imágenes */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Mejora de renderizado de texto */
+p, span, h1, h2, h3, h4, h5, h6 {
+  text-rendering: optimizeLegibility;
+}
+
+/* GPU acceleration - Mejorado */
 .gpu-accelerated {
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
   will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimización para elementos interactivos */
+.interactive-element {
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-element:active {
+  transform: translateZ(0) scale(0.98);
 }
 
 /* Glow effect on focus */
@@ -180,7 +237,7 @@ body {
 }
 
 /* ============================================================================
-   SCROLLBAR PERSONALIZADO
+   SCROLLBAR PERSONALIZADO - Optimizado
    ============================================================================ */
 ::-webkit-scrollbar {
   width: 6px;
@@ -194,10 +251,33 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 3px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Scrollbar delgado para sidebar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Firefox scrollbar */
@@ -291,17 +371,30 @@ input[type="checkbox"] {
 }
 
 /* ============================================================================
-   RESPONSIVE
+   RESPONSIVE - Optimizado
    ============================================================================ */
 @media (max-width: 640px) {
   .hide-mobile {
     display: none !important;
+  }
+  
+  /* Optimización para móviles */
+  body {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (min-width: 641px) {
   .hide-desktop {
     display: none !important;
+  }
+}
+
+/* Mejora de rendimiento en hover solo en desktop */
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-out;
   }
 }
 

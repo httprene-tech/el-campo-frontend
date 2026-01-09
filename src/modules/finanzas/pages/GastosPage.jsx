@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useProyecto } from '../context/ProyectoContext';
-import { useAuth } from '../context/AuthContext';
-import { gastosAPI, categoriasAPI, proveedoresAPI } from '../api';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../components/common';
+import { useProyecto } from '../../../context/ProyectoContext';
+import { useAuth } from '../../../context/AuthContext';
+import { gastosAPI, categoriasAPI, proveedoresAPI } from '../../../api';
+import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import {
   Plus,
   Search,

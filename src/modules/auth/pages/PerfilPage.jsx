@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../api';
-import { Card, Button, Input, Toast, Modal } from '../components/common';
+import { useAuth } from '../../../context/AuthContext';
+import { authAPI } from '../../../api';
+import { Card, Button, Input, Toast, Modal } from '../../../components/common';
 import {
   User,
   Lock,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { albumesAPI, fotosAPI } from '../api';
-import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../components/common';
+import { albumesAPI, fotosAPI } from '../../../api';
+import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
 import {
   Plus,
   Image,

@@ -19,8 +19,10 @@ const Card = ({
       className={`
         bg-white rounded-2xl shadow-sm border border-gray-100
         ${paddings[padding]}
-        ${hover ? 'hover:shadow-md hover:border-gray-200 transition-all cursor-pointer' : ''}
+        ${hover ? 'hover:shadow-md hover:border-gray-200 transition-all duration-200 ease-out cursor-pointer active:scale-[0.99]' : ''}
+        ${onClick ? 'cursor-pointer' : ''}
         ${className}
+        will-change-transform
       `}
       onClick={onClick}
     >

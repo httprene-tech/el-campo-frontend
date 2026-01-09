@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { materialesAPI, movimientosAPI } from '../api';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../components/common';
-import {
-  Plus,
-  Package,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  AlertTriangle,
-  Boxes,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { useMateriales, useMovimientos } from '../../../hooks/queries/inventario';
+import { useCreateMaterial, useCreateMovimiento } from '../../../hooks/mutations/inventario';
+import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { Plus, Package, ArrowUpCircle, ArrowDownCircle, AlertTriangle, Boxes } from 'lucide-react';
+import { UNIDADES_MEDIDA, TIPOS_MOVIMIENTO } from '../../../utils/constants';
+import { formatNumber } from '../../../utils/formatters';
 
 const InventarioPage = () => {
-  const [materiales, setMateriales] = useState([]);
-  const [movimientos, setMovimientos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: materiales = [], isLoading: materialesLoading } = useMateriales();
+  const { data: movimientosData, isLoading: movimientosLoading } = useMovimientos({ page_size: 10 });
+  
+  const createMaterial = useCreateMaterial();
+  const createMovimiento = useCreateMovimiento();
+  
   const [modalMaterial, setModalMaterial] = useState(false);
   const [modalMovimiento, setModalMovimiento] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   
   const [nuevoMaterial, setNuevoMaterial] = useState({
@@ -32,33 +30,10 @@ const InventarioPage = () => {
     nota: '',
   });
 
-  const unidades = [
-    { value: 'BOLSA', label: 'Bolsa' },
-    { value: 'PIEZA', label: 'Pieza / Unidad' },
-    { value: 'METRO_CUBICO', label: 'Metro Cúbico' },
-    { value: 'KILO', label: 'Kilogramo' },
-    { value: 'GLOBAL', label: 'Global' },
-  ];
-
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
-    try {
-      setLoading(true);
-      const [materialesRes, movimientosRes] = await Promise.all([
-        materialesAPI.getAll(),
-        movimientosAPI.getAll(),
-      ]);
-      setMateriales(materialesRes.data);
-      setMovimientos(movimientosRes.data.slice(0, 10));
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const movimientos = React.useMemo(() => {
+    if (!movimientosData) return [];
+    return movimientosData.pages?.flat() || movimientosData || [];
+  }, [movimientosData]);
 
   const showToast = (message, type) => {
     setToast({ message, type });
@@ -67,54 +42,35 @@ const InventarioPage = () => {
 
   const handleCrearMaterial = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-
     try {
-      await materialesAPI.create(nuevoMaterial);
+      await createMaterial.mutateAsync(nuevoMaterial);
       showToast('Material creado', 'success');
       setModalMaterial(false);
-      setNuevoMaterial({
-        nombre: '',
-        unidad_medida: 'BOLSA',
-        stock_minimo_alerta: 5,
-      });
-      cargarDatos();
+      setNuevoMaterial({ nombre: '', unidad_medida: 'BOLSA', stock_minimo_alerta: 5 });
     } catch (error) {
       showToast('Error al crear material', 'error');
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleCrearMovimiento = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-
     try {
-      await movimientosAPI.create(nuevoMovimiento);
+      await createMovimiento.mutateAsync(nuevoMovimiento);
       showToast('Movimiento registrado', 'success');
       setModalMovimiento(false);
-      setNuevoMovimiento({
-        material: '',
-        tipo: 'ENTRADA',
-        cantidad: '',
-        nota: '',
-      });
-      cargarDatos();
+      setNuevoMovimiento({ material: '', tipo: 'ENTRADA', cantidad: '', nota: '' });
     } catch (error) {
       const msg = error.response?.data?.non_field_errors?.[0] || 'Error al registrar';
       showToast(msg, 'error');
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const getUnidadLabel = (unidad) => {
-    const found = unidades.find(u => u.value === unidad);
+    const found = UNIDADES_MEDIDA.find(u => u.value === unidad);
     return found ? found.label : unidad;
   };
 
-  if (loading) return <LoadingSpinner text="Cargando inventario..." />;
+  if (materialesLoading) return <LoadingSpinner text="Cargando inventario..." />;
 
   const materialesConAlerta = materiales.filter(m => 
     Number(m.stock_actual) <= Number(m.stock_minimo_alerta)
@@ -137,7 +93,6 @@ const InventarioPage = () => {
         </div>
       </div>
 
-      {/* Alerta de stock bajo */}
       {materialesConAlerta.length > 0 && (
         <Card className="bg-amber-50 border-amber-200">
           <div className="flex items-start gap-3">
@@ -153,7 +108,6 @@ const InventarioPage = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Lista de materiales */}
         <div className="lg:col-span-2">
           <Card padding="none">
             <div className="p-5 border-b border-gray-100">
@@ -174,10 +128,10 @@ const InventarioPage = () => {
                       </div>
                       <div className="text-right">
                         <p className={`text-lg font-bold ${stockBajo ? 'text-red-600' : 'text-gray-900'}`}>
-                          {Number(material.stock_actual).toFixed(0)}
+                          {formatNumber(material.stock_actual, 0)}
                         </p>
                         <p className="text-xs text-gray-400">
-                          Mín: {Number(material.stock_minimo_alerta).toFixed(0)}
+                          Mín: {formatNumber(material.stock_minimo_alerta, 0)}
                         </p>
                       </div>
                       {stockBajo && (
@@ -198,15 +152,18 @@ const InventarioPage = () => {
           </Card>
         </div>
 
-        {/* Movimientos recientes */}
         <div>
           <Card padding="none">
             <div className="p-5 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900">Movimientos Recientes</h3>
             </div>
             <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
-              {movimientos.length > 0 ? (
-                movimientos.map((mov) => (
+              {movimientosLoading ? (
+                <div className="p-6 text-center">
+                  <LoadingSpinner />
+                </div>
+              ) : movimientos.length > 0 ? (
+                movimientos.slice(0, 10).map((mov) => (
                   <div key={mov.id} className="p-4">
                     <div className="flex items-center gap-2 mb-1">
                       {mov.tipo === 'ENTRADA' ? (
@@ -236,13 +193,7 @@ const InventarioPage = () => {
         </div>
       </div>
 
-      {/* Modal Nuevo Material */}
-      <Modal
-        isOpen={modalMaterial}
-        onClose={() => setModalMaterial(false)}
-        title="Nuevo Material"
-        size="sm"
-      >
+      <Modal isOpen={modalMaterial} onClose={() => setModalMaterial(false)} title="Nuevo Material" size="sm">
         <form onSubmit={handleCrearMaterial} className="space-y-5">
           <Input
             label="Nombre del Material"
@@ -251,15 +202,13 @@ const InventarioPage = () => {
             placeholder="Ej: Cemento, Arena, Fierro"
             required
           />
-          
           <Select
             label="Unidad de Medida"
             value={nuevoMaterial.unidad_medida}
             onChange={(e) => setNuevoMaterial({...nuevoMaterial, unidad_medida: e.target.value})}
-            options={unidades}
+            options={UNIDADES_MEDIDA}
             required
           />
-          
           <Input
             label="Stock Mínimo de Alerta"
             type="number"
@@ -267,25 +216,18 @@ const InventarioPage = () => {
             onChange={(e) => setNuevoMaterial({...nuevoMaterial, stock_minimo_alerta: e.target.value})}
             required
           />
-
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setModalMaterial(false)} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" loading={submitting} className="flex-1">
+            <Button type="submit" loading={createMaterial.isPending} className="flex-1">
               Crear
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal Nuevo Movimiento */}
-      <Modal
-        isOpen={modalMovimiento}
-        onClose={() => setModalMovimiento(false)}
-        title="Registrar Movimiento"
-        size="sm"
-      >
+      <Modal isOpen={modalMovimiento} onClose={() => setModalMovimiento(false)} title="Registrar Movimiento" size="sm">
         <form onSubmit={handleCrearMovimiento} className="space-y-5">
           <Select
             label="Material"
@@ -295,7 +237,6 @@ const InventarioPage = () => {
             placeholder="Seleccionar material"
             required
           />
-          
           <Select
             label="Tipo de Movimiento"
             value={nuevoMovimiento.tipo}
@@ -306,7 +247,6 @@ const InventarioPage = () => {
             ]}
             required
           />
-          
           <Input
             label="Cantidad"
             type="number"
@@ -315,19 +255,17 @@ const InventarioPage = () => {
             onChange={(e) => setNuevoMovimiento({...nuevoMovimiento, cantidad: e.target.value})}
             required
           />
-          
           <Input
             label="Nota (opcional)"
             value={nuevoMovimiento.nota}
             onChange={(e) => setNuevoMovimiento({...nuevoMovimiento, nota: e.target.value})}
             placeholder="Ej: Para cimientos del galpón"
           />
-
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setModalMovimiento(false)} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" loading={submitting} className="flex-1">
+            <Button type="submit" loading={createMovimiento.isPending} className="flex-1">
               Registrar
             </Button>
           </div>

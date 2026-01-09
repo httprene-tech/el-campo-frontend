@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'El Campo - Granja Avícola',
         short_name: 'El Campo',
-        description: 'Sistema de control financiero para granja de gallinas ponedoras',
+        description: 'Sistema ERP completo para gestión de granja avícola - Producción, Finanzas, Salud y más',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',
@@ -49,40 +49,72 @@ export default defineConfig({
             description: 'Ver resumen financiero',
             url: '/',
             icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Registrar Recolección',
+            short_name: 'Recolección',
+            description: 'Registrar producción de huevos',
+            url: '/produccion/recoleccion',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Calendario',
+            short_name: 'Calendario',
+            description: 'Ver eventos y recordatorios',
+            url: '/calendario',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       },
       workbox: {
         // Cache de recursos estáticos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Runtime caching para API
+        // Runtime caching para API - Optimizado para PWA offline
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\/api\/.*/i,
+            // API calls - NetworkFirst con fallback a cache para modo offline
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hora
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 horas
               },
               cacheableResponse: {
                 statuses: [0, 200]
-              }
+              },
+              networkTimeoutSeconds: 3, // Timeout corto para fallback rápido
             }
           },
           {
+            // Imágenes - CacheFirst para mejor performance
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'image-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 semana
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
+              }
+            }
+          },
+          {
+            // Fuentes y assets estáticos
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 año
               }
             }
           }
-        ]
+        ],
+        // Skip waiting para actualizaciones inmediatas
+        skipWaiting: true,
+        clientsClaim: true,
       }
     })
   ],
@@ -90,14 +122,15 @@ export default defineConfig({
   build: {
     target: 'esnext',
     minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'charts': ['recharts'],
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+              'react-query': ['@tanstack/react-query'],
+              'charts': ['recharts'],
+            }
+          }
         }
-      }
-    }
   },
   // Optimizar dev server
   server: {

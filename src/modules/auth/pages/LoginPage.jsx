@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Input, Button } from '../components/common';
+import { useAuth } from '../../../context/AuthContext';
+import { Input, Button } from '../../../components/common';
 import { User, Lock, Egg } from 'lucide-react';
 
 const LoginPage = () => {
