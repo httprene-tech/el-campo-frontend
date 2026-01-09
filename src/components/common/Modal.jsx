@@ -28,33 +28,33 @@ const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Overlay */}
+    <div
+      className="
+        fixed inset-0 z-50
+        flex items-start sm:items-center justify-center
+        p-3 sm:p-4
+      "
+    >
+      {/* Overlay de fondo con blur a pantalla completa */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
         onClick={onClose}
       />
 
       {/* Contenedor del modal */}
       <div
-        className="
+        className={`
           relative z-50
-          flex min-h-full w-full
-          items-start sm:items-center justify-center
-          p-3 sm:p-4
-        "
+          w-full
+          ${sizes[size]}
+          bg-white rounded-2xl shadow-2xl
+          animate-scale-in will-change-transform
+          flex flex-col
+          max-h-[calc(100vh-3rem)]
+          overflow-hidden
+        `}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className={`
-            relative w-full
-            ${sizes[size]}
-            bg-white rounded-2xl shadow-2xl
-            animate-scale-in will-change-transform
-            flex flex-col
-            max-h-[calc(100vh-3rem)]
-          `}
-          onClick={(e) => e.stopPropagation()}
-        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center gap-3 min-w-0">
@@ -72,10 +72,9 @@ const Modal = ({
             </button>
           </div>
 
-          {/* Contenido scrollable */}
-          <div className="p-4 sm:p-5 overflow-y-auto">
-            {children}
-          </div>
+        {/* Contenido scrollable */}
+        <div className="p-4 sm:p-5 overflow-y-auto">
+          {children}
         </div>
       </div>
     </div>
