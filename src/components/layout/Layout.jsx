@@ -74,7 +74,7 @@ const Layout = () => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-50
+        fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-40
         transform transition-transform duration-300 ease-out
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}

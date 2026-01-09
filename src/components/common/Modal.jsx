@@ -30,21 +30,21 @@ const Modal = ({
   return (
     <div
       className="
-        fixed inset-0 z-50
+        fixed inset-0 z-[80]
         flex items-start sm:items-center justify-center
         p-3 sm:p-4
       "
     >
       {/* Overlay de fondo con blur a pantalla completa */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
+        className="absolute inset-0 z-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
         onClick={onClose}
       />
 
       {/* Contenedor del modal */}
       <div
         className={`
-          relative z-50
+          relative z-10
           w-full
           ${sizes[size]}
           bg-white rounded-2xl shadow-2xl
