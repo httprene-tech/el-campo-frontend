@@ -3,7 +3,7 @@ import { useMateriales, useMovimientos } from '../../../hooks/queries/inventario
 import { useCreateMaterial, useCreateMovimiento } from '../../../hooks/mutations/inventario';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import { Plus, Package, ArrowUpCircle, ArrowDownCircle, AlertTriangle, Boxes } from 'lucide-react';
-import { UNIDADES_MEDIDA, TIPOS_MOVIMIENTO } from '../../../utils/constants';
+import { UNIDADES_MEDIDA, TIPOS_MOVIMIENTO, TIPOS_INVENTARIO } from '../../../utils/constants';
 import { formatNumber } from '../../../utils/formatters';
 
 const InventarioPage = () => {
@@ -19,8 +19,10 @@ const InventarioPage = () => {
   
   const [nuevoMaterial, setNuevoMaterial] = useState({
     nombre: '',
+    tipo_inventario: 'CONSTRUCCION',
     unidad_medida: 'BOLSA',
     stock_minimo_alerta: 5,
+    codigo: '',
   });
 
   const [nuevoMovimiento, setNuevoMovimiento] = useState({
@@ -46,7 +48,13 @@ const InventarioPage = () => {
       await createMaterial.mutateAsync(nuevoMaterial);
       showToast('Material creado', 'success');
       setModalMaterial(false);
-      setNuevoMaterial({ nombre: '', unidad_medida: 'BOLSA', stock_minimo_alerta: 5 });
+      setNuevoMaterial({ 
+        nombre: '', 
+        tipo_inventario: 'CONSTRUCCION', 
+        unidad_medida: 'BOLSA', 
+        stock_minimo_alerta: 5,
+        codigo: '',
+      });
     } catch (error) {
       showToast('Error al crear material', 'error');
     }
@@ -54,8 +62,22 @@ const InventarioPage = () => {
 
   const handleCrearMovimiento = async (e) => {
     e.preventDefault();
+    
+    // Validación de stock para SALIDA
+    if (nuevoMovimiento.tipo === 'SALIDA') {
+      const material = materiales.find(m => m.id === parseInt(nuevoMovimiento.material));
+      if (material && Number(nuevoMovimiento.cantidad) > Number(material.stock_actual)) {
+        showToast(`Stock insuficiente. Disponible: ${material.stock_actual}`, 'error');
+        return;
+      }
+    }
+
     try {
-      await createMovimiento.mutateAsync(nuevoMovimiento);
+      await createMovimiento.mutateAsync({
+        ...nuevoMovimiento,
+        material: parseInt(nuevoMovimiento.material),
+        cantidad: parseFloat(nuevoMovimiento.cantidad)
+      });
       showToast('Movimiento registrado', 'success');
       setModalMovimiento(false);
       setNuevoMovimiento({ material: '', tipo: 'ENTRADA', cantidad: '', nota: '' });
@@ -168,19 +190,25 @@ const InventarioPage = () => {
                     <div className="flex items-center gap-2 mb-1">
                       {mov.tipo === 'ENTRADA' ? (
                         <ArrowUpCircle className="w-4 h-4 text-emerald-500" />
-                      ) : (
+                      ) : mov.tipo === 'SALIDA' ? (
                         <ArrowDownCircle className="w-4 h-4 text-red-500" />
+                      ) : (
+                        <Package className="w-4 h-4 text-blue-500" />
                       )}
                       <span className={`text-sm font-medium ${
-                        mov.tipo === 'ENTRADA' ? 'text-emerald-600' : 'text-red-600'
+                        mov.tipo === 'ENTRADA' ? 'text-emerald-600' : 
+                        mov.tipo === 'SALIDA' ? 'text-red-600' : 'text-blue-600'
                       }`}>
-                        {mov.tipo === 'ENTRADA' ? '+' : '-'}{mov.cantidad}
+                        {mov.tipo === 'ENTRADA' ? '+' : mov.tipo === 'SALIDA' ? '-' : ''}{mov.cantidad}
                       </span>
                       <span className="text-sm text-gray-600">{mov.material_nombre}</span>
                     </div>
-                    {mov.nota && (
-                      <p className="text-xs text-gray-500 pl-6 truncate">{mov.nota}</p>
-                    )}
+                    <div className="flex items-center justify-between pl-6">
+                      <p className="text-xs text-gray-400">{mov.tipo_display}</p>
+                      {mov.nota && (
+                        <p className="text-xs text-gray-500 truncate max-w-[150px]">{mov.nota}</p>
+                      )}
+                    </div>
                   </div>
                 ))
               ) : (
@@ -196,26 +224,43 @@ const InventarioPage = () => {
       <Modal isOpen={modalMaterial} onClose={() => setModalMaterial(false)} title="Nuevo Material" size="sm">
         <form onSubmit={handleCrearMaterial} className="space-y-5">
           <Input
-            label="Nombre del Material"
+            label="Nombre"
             value={nuevoMaterial.nombre}
             onChange={(e) => setNuevoMaterial({...nuevoMaterial, nombre: e.target.value})}
             placeholder="Ej: Cemento, Arena, Fierro"
             required
           />
-          <Select
-            label="Unidad de Medida"
-            value={nuevoMaterial.unidad_medida}
-            onChange={(e) => setNuevoMaterial({...nuevoMaterial, unidad_medida: e.target.value})}
-            options={UNIDADES_MEDIDA}
-            required
-          />
-          <Input
-            label="Stock Mínimo de Alerta"
-            type="number"
-            value={nuevoMaterial.stock_minimo_alerta}
-            onChange={(e) => setNuevoMaterial({...nuevoMaterial, stock_minimo_alerta: e.target.value})}
-            required
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Tipo"
+              value={nuevoMaterial.tipo_inventario}
+              onChange={(e) => setNuevoMaterial({...nuevoMaterial, tipo_inventario: e.target.value})}
+              options={TIPOS_INVENTARIO}
+              required
+            />
+            <Input
+              label="Código (opcional)"
+              value={nuevoMaterial.codigo}
+              onChange={(e) => setNuevoMaterial({...nuevoMaterial, codigo: e.target.value})}
+              placeholder="Ej: CEM-001"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Unidad"
+              value={nuevoMaterial.unidad_medida}
+              onChange={(e) => setNuevoMaterial({...nuevoMaterial, unidad_medida: e.target.value})}
+              options={UNIDADES_MEDIDA}
+              required
+            />
+            <Input
+              label="Stock Mínimo"
+              type="number"
+              value={nuevoMaterial.stock_minimo_alerta}
+              onChange={(e) => setNuevoMaterial({...nuevoMaterial, stock_minimo_alerta: e.target.value})}
+              required
+            />
+          </div>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setModalMaterial(false)} className="flex-1">
               Cancelar
@@ -243,7 +288,8 @@ const InventarioPage = () => {
             onChange={(e) => setNuevoMovimiento({...nuevoMovimiento, tipo: e.target.value})}
             options={[
               { value: 'ENTRADA', label: 'Entrada (Compra/Ingreso)' },
-              { value: 'SALIDA', label: 'Salida (Uso en Obra)' },
+              { value: 'SALIDA', label: 'Salida (Uso/Consumo)' },
+              { value: 'AJUSTE', label: 'Ajuste (Corrección)' },
             ]}
             required
           />

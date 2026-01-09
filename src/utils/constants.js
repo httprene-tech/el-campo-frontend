@@ -28,6 +28,7 @@ export const UNIDADES_MEDIDA = [
   { value: 'PIEZA', label: 'Pieza / Unidad' },
   { value: 'METRO_CUBICO', label: 'Metro Cúbico' },
   { value: 'KILO', label: 'Kilogramo' },
+  { value: 'LITRO', label: 'Litro' },
   { value: 'GLOBAL', label: 'Global' },
 ];
 
@@ -35,6 +36,19 @@ export const UNIDADES_MEDIDA = [
 export const TIPOS_MOVIMIENTO = {
   ENTRADA: 'ENTRADA',
   SALIDA: 'SALIDA',
+  AJUSTE: 'AJUSTE',
+};
+
+export const TIPOS_INVENTARIO = [
+  { value: 'CONSTRUCCION', label: 'Material de Construcción' },
+  { value: 'GRANJA', label: 'Insumo de Granja' },
+];
+
+export const ESTADOS_EVENTO = {
+  PENDIENTE: 'PENDIENTE',
+  EN_PROCESO: 'EN_PROCESO',
+  COMPLETADO: 'COMPLETADO',
+  CANCELADO: 'CANCELADO',
 };
 
 // Colores para gráficos
