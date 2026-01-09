@@ -2,36 +2,50 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
     <!-- SEO -->
     <title>El Campo - Granja Avícola</title>
-    <meta name="description" content="Sistema de control financiero para granja de gallinas ponedoras. Gestiona gastos, proyectos, documentos y más." />
-    <meta name="keywords" content="granja, avícola, ponedoras, gallinas, finanzas, control, gastos" />
+    <meta name="description" content="Sistema ERP para granja avícola - Gestiona producción, finanzas, salud animal y más." />
+    <meta name="keywords" content="granja, avícola, ponedoras, gallinas, finanzas, control, gastos, ERP" />
     <meta name="author" content="El Campo" />
     
-    <!-- PWA -->
-    <!-- PWA -->
+    <!-- PWA Base -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="El Campo" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#059669" />
+    <meta name="theme-color" content="#059669" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#047857" media="(prefers-color-scheme: dark)" />
+    
+    <!-- iOS PWA Optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="El Campo" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- iOS Splash Screens (for iPhone/iPad) -->
+    <link rel="apple-touch-startup-image" href="/pwa-512x512.png" />
+    
+    <!-- Android/Chrome PWA -->
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    
+    <!-- Prevent phone number detection -->
+    <meta name="format-detection" content="telephone=no" />
     
     <!-- Open Graph -->
     <meta property="og:title" content="El Campo - Granja Avícola" />
-    <meta property="og:description" content="Sistema de control financiero para granja de gallinas ponedoras" />
+    <meta property="og:description" content="Sistema ERP para granja avícola" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/web-app-manifest-512x512.png" />
     
-    <!-- Fonts -->
+    <!-- Fonts - Preload for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/pwa-192x192.png" as="image" type="image/png" />
   </head>
   <body>
     <!-- Loading screen mientras carga React -->

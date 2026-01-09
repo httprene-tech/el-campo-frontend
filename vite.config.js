@@ -69,6 +69,9 @@ export default defineConfig({
       workbox: {
         // Cache de recursos estáticos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Offline fallback
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [/^\/api/],
         // Runtime caching para API - Optimizado para PWA offline
         runtimeCaching: [
           {

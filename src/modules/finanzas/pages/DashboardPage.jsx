@@ -33,8 +33,12 @@ const DashboardPage = () => {
   const { data: gastosData, isLoading: gastosLoading } = useGastos(
     proyectoActivo ? { proyecto: proyectoActivo.id, page_size: 5 } : {}
   );
-  const { data: categorias = [] } = useCategorias();
-  const { data: resumenMensual = [] } = useResumenMensualGastos(proyectoActivo?.id);
+  const { data: categoriasData } = useCategorias();
+  const { data: resumenMensualData } = useResumenMensualGastos(proyectoActivo?.id);
+  
+  // Ensure arrays
+  const categorias = Array.isArray(categoriasData) ? categoriasData : [];
+  const resumenMensual = Array.isArray(resumenMensualData) ? resumenMensualData : [];
 
   // Extraer datos de gastos (puede ser array o paginado)
   const gastosRecientes = React.useMemo(() => {
