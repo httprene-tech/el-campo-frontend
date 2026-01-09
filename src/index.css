@@ -182,7 +182,7 @@ button, a, [role="button"] {
 
 /* Modal optimizado - GPU accelerated sin blur */
 .modal-enter {
-  animation: modal-scale 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: modal-scale 0.25s cubic-bezier(0.32, 0.72, 0, 1);
   transform-origin: center center;
 }
 
