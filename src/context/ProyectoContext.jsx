@@ -25,11 +25,15 @@ export const ProyectoProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await proyectosAPI.getAll();
-      setProyectos(response.data);
+      // Handle paginated response (DRF returns { results: [], count, next, previous })
+      // or plain array response
+      const data = response.data.results ?? response.data;
+      const proyectosArray = Array.isArray(data) ? data : [];
+      setProyectos(proyectosArray);
       
       // Si hay proyectos y no hay uno activo, seleccionar el primero
-      if (response.data.length > 0 && !proyectoActivo) {
-        setProyectoActivo(response.data[0]);
+      if (proyectosArray.length > 0 && !proyectoActivo) {
+        setProyectoActivo(proyectosArray[0]);
       }
     } catch (error) {
       console.error('Error al cargar proyectos:', error);
