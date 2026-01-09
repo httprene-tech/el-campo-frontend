@@ -3,6 +3,7 @@ import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { gastosAPI, categoriasAPI, proveedoresAPI } from '../../../api';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { extractApiData } from '../../../utils/formatters';
 import {
   Plus,
   Search,
@@ -61,9 +62,9 @@ const GastosPage = () => {
         proveedoresAPI.getAll(),
       ]);
       
-      setGastos(gastosRes.data);
-      setCategorias(categoriasRes.data);
-      setProveedores(proveedoresRes.data);
+      setGastos(extractApiData(gastosRes.data));
+      setCategorias(extractApiData(categoriasRes.data));
+      setProveedores(extractApiData(proveedoresRes.data));
     } catch (error) {
       console.error('Error:', error);
       showToast('Error al cargar datos', 'error');

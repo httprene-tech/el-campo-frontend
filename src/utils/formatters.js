@@ -69,3 +69,14 @@ export const truncateText = (text, maxLength = 50) => {
   if (text.length <= maxLength) return text;
   return `${text.substring(0, maxLength)}...`;
 };
+
+/**
+ * Extracts array data from API response that may be paginated (DRF format)
+ * Handles: plain arrays, { results: [] }, or any object with results property
+ */
+export const extractApiData = (responseData) => {
+  if (!responseData) return [];
+  if (Array.isArray(responseData)) return responseData;
+  if (responseData.results && Array.isArray(responseData.results)) return responseData.results;
+  return [];
+};

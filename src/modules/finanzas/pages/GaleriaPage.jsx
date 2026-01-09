@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { albumesAPI, fotosAPI } from '../../../api';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
+import { extractApiData } from '../../../utils/formatters';
 import {
   Plus,
   Image,
@@ -58,7 +59,7 @@ const GaleriaPage = () => {
     try {
       setLoading(true);
       const response = await albumesAPI.getAll();
-      setAlbumes(response.data);
+      setAlbumes(extractApiData(response.data));
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -69,7 +70,7 @@ const GaleriaPage = () => {
   const cargarFotos = async () => {
     try {
       const response = await fotosAPI.getAll(albumActivo.id);
-      setFotos(response.data);
+      setFotos(extractApiData(response.data));
     } catch (error) {
       console.error('Error:', error);
     }

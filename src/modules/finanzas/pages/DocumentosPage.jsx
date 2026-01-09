@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { carpetasAPI, documentosAPI } from '../../../api';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { extractApiData } from '../../../utils/formatters';
 import {
   Plus,
   FileText,
@@ -58,7 +59,7 @@ const DocumentosPage = () => {
     try {
       setLoading(true);
       const response = await carpetasAPI.getAll();
-      setCarpetas(response.data);
+      setCarpetas(extractApiData(response.data));
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -69,7 +70,7 @@ const DocumentosPage = () => {
   const cargarDocumentos = async () => {
     try {
       const response = await documentosAPI.getAll({ carpeta: carpetaActiva.id });
-      setDocumentos(response.data);
+      setDocumentos(extractApiData(response.data));
     } catch (error) {
       console.error('Error:', error);
     }

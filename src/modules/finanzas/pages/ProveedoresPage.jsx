@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { proveedoresAPI } from '../../../api';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
+import { extractApiData } from '../../../utils/formatters';
 import {
   Plus,
   Users,
@@ -35,7 +36,7 @@ const ProveedoresPage = () => {
     try {
       setLoading(true);
       const response = await proveedoresAPI.getAll();
-      setProveedores(response.data);
+      setProveedores(extractApiData(response.data));
     } catch (error) {
       console.error('Error:', error);
     } finally {
