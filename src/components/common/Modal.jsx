@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
 const Modal = ({ 
@@ -9,6 +10,18 @@ const Modal = ({
   size = 'md',
   type = 'default', // default, success, error, warning, info
 }) => {
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const sizes = {
@@ -27,58 +40,60 @@ const Modal = ({
     info: <Info className="w-6 h-6 text-blue-500" />,
   };
 
-  return (
-    <div
-      className="
-        fixed inset-0 z-[80]
-        flex items-start sm:items-center justify-center
-        p-3 sm:p-4
-      "
-    >
-      {/* Overlay de fondo con blur a pantalla completa */}
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999]">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 z-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Contenedor del modal */}
-      <div
-        className={`
-          relative z-10
-          w-full
-          ${sizes[size]}
-          bg-white rounded-2xl shadow-2xl
-          animate-scale-in will-change-transform
-          flex flex-col
-          max-h-[calc(100vh-3rem)]
-          overflow-hidden
-        `}
-        onClick={(e) => e.stopPropagation()}
+      {/* Scroll container */}
+      <div 
+        className="fixed inset-0 overflow-y-auto"
+        onClick={onClose}
       >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 flex-shrink-0">
-            <div className="flex items-center gap-3 min-w-0">
-              {icons[type] && <span className="flex-shrink-0">{icons[type]}</span>}
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                {title}
-              </h3>
+        <div className="flex min-h-full items-center justify-center p-4">
+          {/* Modal panel */}
+          <div
+            className={`
+              relative w-full ${sizes[size]}
+              bg-white rounded-2xl shadow-2xl
+              animate-scale-in
+              flex flex-col
+              max-h-[85vh]
+            `}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                {icons[type] && <span className="flex-shrink-0">{icons[type]}</span>}
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {title}
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-colors flex-shrink-0"
+                aria-label="Cerrar"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 ease-out touch-manipulation flex-shrink-0"
-              aria-label="Cerrar"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
 
-        {/* Contenido scrollable */}
-        <div className="p-4 sm:p-5 overflow-y-auto">
-          {children}
+            {/* Content */}
+            <div className="p-5 overflow-y-auto flex-1 overscroll-contain">
+              {children}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+
+  // Render modal at root level using Portal
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;
