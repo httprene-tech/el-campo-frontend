@@ -21,6 +21,7 @@ import {
   Layers,
   ShoppingBasket,
 } from 'lucide-react';
+import { PWAInstallBanner } from '../common';
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -209,6 +210,7 @@ const Layout = () => {
           </div>
         </main>
       </div>
+      <PWAInstallBanner />
     </div>
   );
 };

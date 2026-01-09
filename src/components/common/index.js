@@ -8,3 +8,4 @@ export { default as Toast } from './Toast';
 export { default as Skeleton, SkeletonCard, SkeletonRow, SkeletonPage } from './Skeleton';
 export { default as EmptyState } from './EmptyState';
 
+export { default as PWAInstallBanner } from './PWAInstallBanner';
