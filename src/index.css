@@ -180,10 +180,21 @@ button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Mejora de rendimiento para elementos con transiciones */
-[class*="transition"], [class*="animate"] {
-  will-change: transform, opacity;
-  backface-visibility: hidden;
+/* Modal optimizado - GPU accelerated sin blur */
+.modal-enter {
+  animation: modal-scale 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+  transform-origin: center center;
+}
+
+@keyframes modal-scale {
+  from { 
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Optimización de imágenes */

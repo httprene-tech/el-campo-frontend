@@ -44,7 +44,7 @@ const Modal = ({
     <div className="fixed inset-0 z-[9999]">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-black/60"
         onClick={onClose}
       />
 
@@ -59,7 +59,7 @@ const Modal = ({
             className={`
               relative w-full ${sizes[size]}
               bg-white rounded-2xl shadow-2xl
-              animate-scale-in
+              modal-enter
               flex flex-col
               max-h-[85vh]
             `}
