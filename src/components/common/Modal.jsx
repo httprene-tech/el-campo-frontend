@@ -7,7 +7,7 @@ const Modal = ({
   title, 
   children, 
   size = 'md',
-  type = 'default' // default, success, error, warning, info
+  type = 'default', // default, success, error, warning, info
 }) => {
   if (!isOpen) return null;
 
@@ -28,36 +28,52 @@ const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in will-change-opacity"
         onClick={onClose}
       />
-      
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div 
-          className={`relative bg-white rounded-2xl shadow-2xl ${sizes[size]} w-full animate-scale-in will-change-transform`}
+
+      {/* Contenedor del modal */}
+      <div
+        className="
+          relative z-50
+          flex min-h-full w-full
+          items-start sm:items-center justify-center
+          p-3 sm:p-4
+        "
+      >
+        <div
+          className={`
+            relative w-full
+            ${sizes[size]}
+            bg-white rounded-2xl shadow-2xl
+            animate-scale-in will-change-transform
+            flex flex-col
+            max-h-[calc(100vh-3rem)]
+          `}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
               {icons[type] && <span className="flex-shrink-0">{icons[type]}</span>}
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                {title}
+              </h3>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 ease-out touch-manipulation"
+              className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 ease-out touch-manipulation flex-shrink-0"
               aria-label="Cerrar"
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-5">
+          {/* Contenido scrollable */}
+          <div className="p-4 sm:p-5 overflow-y-auto">
             {children}
           </div>
         </div>

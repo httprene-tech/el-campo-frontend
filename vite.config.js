@@ -122,15 +122,15 @@ export default defineConfig({
   build: {
     target: 'esnext',
     minify: 'esbuild',
-        rollupOptions: {
-          output: {
-            manualChunks: {
-              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
               'react-query': ['@tanstack/react-query'],
-              'charts': ['recharts'],
-            }
-          }
+          'charts': ['recharts'],
         }
+      }
+    }
   },
   // Optimizar dev server
   server: {

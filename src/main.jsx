@@ -12,7 +12,7 @@ registerSW({ immediate: true })
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryProvider>
-      <App />
+    <App />
     </QueryProvider>
   </React.StrictMode>,
 )
