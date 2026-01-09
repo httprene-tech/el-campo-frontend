@@ -23,7 +23,7 @@ export default defineConfig({
         categories: ['finance', 'productivity', 'business'],
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'web-app-manifest-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
@@ -41,39 +41,52 @@ export default defineConfig({
             short_name: 'Gasto',
             description: 'Registrar un nuevo gasto rápidamente',
             url: '/gastos',
-            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            icons: [{ src: 'web-app-manifest-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'Ver Dashboard',
             short_name: 'Dashboard',
             description: 'Ver resumen financiero',
             url: '/',
-            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            icons: [{ src: 'web-app-manifest-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'Registrar Recolección',
             short_name: 'Recolección',
             description: 'Registrar producción de huevos',
             url: '/produccion/recoleccion',
-            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            icons: [{ src: 'web-app-manifest-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'Calendario',
             short_name: 'Calendario',
             description: 'Ver eventos y recordatorios',
             url: '/calendario',
-            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            icons: [{ src: 'web-app-manifest-192x192.png', sizes: '192x192' }]
           }
         ]
       },
       workbox: {
         // Cache de recursos estáticos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Offline fallback
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api/],
+        // NO usar navigateFallback - causa falsos offline en refresh
+        // navigateFallback removido para evitar que muestre offline.html incorrectamente
+        navigateFallbackDenylist: [/^\/api/, /^\/offline\.html/],
         // Runtime caching para API - Optimizado para PWA offline
         runtimeCaching: [
+          {
+            // Navegación - NetworkFirst para evitar falsos offline en F5
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 24 horas
+              },
+              networkTimeoutSeconds: 5,
+            }
+          },
           {
             // API calls - NetworkFirst con fallback a cache para modo offline
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
