@@ -28,6 +28,16 @@ import {
 import { formatCurrency, formatDateShort, formatPercentage } from '../../../utils/formatters';
 import { CHART_COLORS } from '../../../utils/constants';
 
+const VIBRANT_COLORS = [
+  '#10b981', // Emerald 500
+  '#3b82f6', // Blue 500
+  '#f59e0b', // Amber 500
+  '#8b5cf6', // Violet 500
+  '#ec4899', // Pink 500
+  '#06b6d4', // Cyan 500
+  '#f97316', // Orange 500
+];
+
 const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
   if (active && payload && payload.length) {
     return (
@@ -82,7 +92,7 @@ const DashboardPage = () => {
       .map(([name, value], i) => ({
         name,
         value,
-        color: CHART_COLORS[i % CHART_COLORS.length],
+        color: VIBRANT_COLORS[i % VIBRANT_COLORS.length],
       }))
       .sort((a, b) => b.value - a.value);
   }, [allExpenses]);
@@ -163,11 +173,11 @@ const DashboardPage = () => {
               <p className="text-2xl font-black text-gray-900 mt-1">
                 {formatCurrency(presupuesto)}
               </p>
-              <p className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+              <p className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
                 Crédito Disponible
               </p>
             </div>
-            <div className="p-3 bg-gray-900 rounded-2xl shadow-sm">
+            <div className="p-3 bg-emerald-600 rounded-2xl shadow-sm shadow-emerald-200">
               <Wallet className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -196,19 +206,19 @@ const DashboardPage = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Disponible</p>
-              <p className={`text-2xl font-black mt-1 ${saldo > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`text-2xl font-black mt-1 ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {formatCurrency(saldo)}
               </p>
               <div className="flex items-center gap-1 mt-2">
-                <ArrowDownRight className={`w-3 h-3 ${saldo > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                <span className={`text-xs font-bold ${saldo > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <ArrowDownRight className={`w-3 h-3 ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`} />
+                <span className={`text-xs font-bold ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {formatPercentage(100 - porcentaje)}
                 </span>
                 <span className="text-[10px] text-gray-400 ml-1">restante</span>
               </div>
             </div>
-            <div className={`p-3 rounded-2xl shadow-sm ${saldo > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-              <TrendingDown className={`w-5 h-5 ${saldo > 0 ? 'text-green-600' : 'text-red-600'}`} />
+            <div className={`p-3 rounded-2xl shadow-sm ${saldo > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
+              <TrendingDown className={`w-5 h-5 ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`} />
             </div>
           </div>
         </Card>
@@ -231,27 +241,27 @@ const DashboardPage = () => {
 
       {/* Budget Progress Indicator */}
       <Card className="border-none bg-white shadow-sm overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-1 h-full bg-gray-900" />
+        <div className="absolute top-0 left-0 w-1 h-full bg-emerald-600" />
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Progreso de Ejecución</h3>
             <p className="text-xs text-gray-400">Distribución del presupuesto objetivo</p>
           </div>
-          <span className={`text-xl font-black ${porcentaje > 90 ? 'text-red-600' : 'text-gray-900'}`}>
+          <span className={`text-xl font-black ${porcentaje > 90 ? 'text-red-600' : 'text-emerald-600'}`}>
             {formatPercentage(porcentaje)}
           </span>
         </div>
         <div className="h-4 bg-gray-50 rounded-full overflow-hidden mb-2 border border-gray-100">
           <div 
             className={`h-full rounded-full transition-all duration-1000 ease-out ${
-              porcentaje > 90 ? 'bg-red-500' : porcentaje > 75 ? 'bg-amber-500' : 'bg-green-500'
+              porcentaje > 90 ? 'bg-red-500' : porcentaje > 75 ? 'bg-amber-500' : 'bg-emerald-500'
             }`}
             style={{ width: `${Math.min(porcentaje, 100)}%` }}
           />
         </div>
         <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
           <span>Base 0 Bs</span>
-          <span className="text-gray-900">Limite: {formatCurrency(presupuesto)}</span>
+          <span className="text-emerald-800">Limite: {formatCurrency(presupuesto)}</span>
         </div>
       </Card>
 
@@ -262,7 +272,7 @@ const DashboardPage = () => {
           <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
             <h3 className="font-bold text-gray-900">Tendencia de Gastos Mensuales</h3>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gray-900" />
+              <div className="w-3 h-3 rounded-full bg-blue-600" />
               <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Inversión Bs</span>
             </div>
           </div>
@@ -274,8 +284,8 @@ const DashboardPage = () => {
                 <AreaChart data={datosAreaChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#111827" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#111827" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
@@ -297,7 +307,7 @@ const DashboardPage = () => {
                     type="monotone" 
                     dataKey="total" 
                     name="Inversión"
-                    stroke="#111827" 
+                    stroke="#3b82f6" 
                     strokeWidth={4}
                     fillOpacity={1} 
                     fill="url(#colorTotal)"
