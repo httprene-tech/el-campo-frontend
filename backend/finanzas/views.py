@@ -36,7 +36,7 @@ from .serializers import (
 from core.common.mixins import OptimizedQuerySetMixin, FilterByDateMixin
 from .constants import ERROR_PRESUPUESTO_EXCEDIDO
 from .services import FinanzasService
-from core.common.permissions import IsAdminOrReadOnly
+from core.common.permissions import IsAdminOrReadOnly, IsOwnerOrAdmin
 
 # Logger configuration
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class AlbumViewSet(OptimizedQuerySetMixin, viewsets.ModelViewSet):
     """
     queryset = Album.objects.filter(eliminado=False)
     serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_serializer_class(self):
         """Usa serializer ligero para listado."""
@@ -212,7 +212,7 @@ class DocumentoViewSet(OptimizedQuerySetMixin, FilterByDateMixin, viewsets.Model
     """
     queryset = Documento.objects.filter(eliminado=False)
     serializer_class = DocumentoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
@@ -458,7 +458,7 @@ class GastoViewSet(OptimizedQuerySetMixin, FilterByDateMixin, viewsets.ModelView
     """
     queryset = Gasto.objects.filter(eliminado=False)
     serializer_class = GastoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
@@ -563,3 +563,39 @@ class GastoViewSet(OptimizedQuerySetMixin, FilterByDateMixin, viewsets.ModelView
         ).order_by('-mes')
         
         return Response(list(resumen))
+
+    @action(detail=False, methods=['get'])
+    def resumen_por_categoria(self, request):
+        """
+        Retorna un resumen de gastos agrupado por categoría.
+        Query params:
+            - proyecto: ID del proyecto (requerido)
+        """
+        proyecto_id = request.query_params.get('proyecto')
+        if not proyecto_id:
+            return Response(
+                {"error": "Se requiere el parámetro 'proyecto'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        gastos = Gasto.objects.filter(
+            proyecto_id=proyecto_id,
+            eliminado=False
+        ).select_related('categoria')
+        
+        resumen = gastos.values(
+            'categoria__nombre'
+        ).annotate(
+            total=Sum('monto')
+        ).order_by('-total')
+        
+        # Formatear respuesta para el frontend
+        resultado = [
+            {
+                "categoria": item['categoria__nombre'] or 'Sin categoría',
+                "total": float(item['total'] or 0)
+            }
+            for item in resumen
+        ]
+        
+        return Response(resultado)

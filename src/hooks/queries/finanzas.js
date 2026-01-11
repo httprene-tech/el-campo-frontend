@@ -73,6 +73,15 @@ export const useResumenMensualGastos = (proyectoId) => {
   });
 };
 
+export const useResumenPorCategoria = (proyectoId) => {
+  return useQuery({
+    queryKey: ['gastos', 'resumen-por-categoria', proyectoId],
+    queryFn: () => gastosAPI.resumenPorCategoria(proyectoId),
+    select: (response) => response.data,
+    enabled: !!proyectoId,
+  });
+};
+
 // Categorías - Datos estáticos, staleTime largo
 export const useCategorias = () => {
   return useQuery({

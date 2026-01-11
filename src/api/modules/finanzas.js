@@ -49,6 +49,8 @@ export const gastosAPI = {
   delete: (id) => apiClient.delete(`/finanzas/gastos/${id}/`),
   resumenMensual: (proyectoId) => 
     apiClient.get('/finanzas/gastos/resumen_mensual/', { params: { proyecto: proyectoId } }),
+  resumenPorCategoria: (proyectoId) => 
+    apiClient.get('/finanzas/gastos/resumen_por_categoria/', { params: { proyecto: proyectoId } }),
 };
 
 // Categorías
@@ -122,6 +124,17 @@ export const documentosAPI = {
       }
     });
     return apiClient.post('/finanzas/documentos/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  update: (id, data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+      if (data[key] !== null && data[key] !== undefined) {
+        formData.append(key, data[key]);
+      }
+    });
+    return apiClient.put(`/finanzas/documentos/${id}/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },

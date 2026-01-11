@@ -47,6 +47,12 @@ export const useDeleteProyecto = () => {
   });
 };
 
+export const useExportPDFProyecto = () => {
+  return useMutation({
+    mutationFn: ({ id, params = {} }) => proyectosAPI.exportarPDF(id, params),
+  });
+};
+
 // Gastos
 export const useCreateGasto = () => {
   const queryClient = useQueryClient();
@@ -55,6 +61,7 @@ export const useCreateGasto = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gastos'] });
       queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-mensual'] });
+      queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-por-categoria'] });
     },
   });
 };
@@ -67,6 +74,7 @@ export const useUpdateGasto = () => {
       queryClient.invalidateQueries({ queryKey: ['gastos'] });
       queryClient.invalidateQueries({ queryKey: ['gastos', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-mensual'] });
+      queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-por-categoria'] });
     },
   });
 };
@@ -78,6 +86,7 @@ export const useDeleteGasto = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gastos'] });
       queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-mensual'] });
+      queryClient.invalidateQueries({ queryKey: ['gastos', 'resumen-por-categoria'] });
     },
   });
 };
@@ -167,6 +176,17 @@ export const useCreateAlbum = () => {
   });
 };
 
+export const useUpdateAlbum = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => albumesAPI.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['albumes'] });
+      queryClient.invalidateQueries({ queryKey: ['albumes', variables.id] });
+    },
+  });
+};
+
 export const useUploadFoto = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -212,6 +232,17 @@ export const useCreateCarpeta = () => {
   });
 };
 
+export const useUpdateCarpeta = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => carpetasAPI.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['carpetas'] });
+      queryClient.invalidateQueries({ queryKey: ['carpetas', variables.id] });
+    },
+  });
+};
+
 export const useDeleteCarpeta = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -229,6 +260,17 @@ export const useUploadDocumento = () => {
     mutationFn: (data) => documentosAPI.upload(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentos'] });
+    },
+  });
+};
+
+export const useUpdateDocumento = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => documentosAPI.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['documentos'] });
+      queryClient.invalidateQueries({ queryKey: ['documentos', variables.id] });
     },
   });
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
-import { useGastos, useResumenMensualGastos } from '../../../hooks/queries/finanzas';
+import { useGastos, useResumenMensualGastos, useResumenPorCategoria } from '../../../hooks/queries/finanzas';
 import { Card, SkeletonCard, SkeletonRow } from '../../../components/common';
 import {
   AreaChart,
@@ -60,41 +60,29 @@ const DashboardPage = () => {
   const { proyectoActivo, loading: proyectoLoading } = useProyecto();
   const { user } = useAuth();
   
-  // React Query hooks - Fetching a larger page size for better aggregation if needed
-
-  // However, we'll work with what useGastos provides (infinite query)
+  // React Query hooks
   const { data: gastosData, isLoading: gastosLoading } = useGastos(
-    proyectoActivo ? { proyecto: proyectoActivo.id, page_size: 100 } : {}
+    proyectoActivo ? { proyecto: proyectoActivo.id, page_size: 20 } : {}
   );
   const { data: resumenMensualData, isLoading: resumenLoading } = useResumenMensualGastos(proyectoActivo?.id);
+  const { data: resumenPorCategoriaData = [], isLoading: categoriasLoading } = useResumenPorCategoria(proyectoActivo?.id);
   
-  // Flatten initial pages of gastos for aggregation
+  // Flatten initial pages of gastos for recent expenses list
   const allExpenses = React.useMemo(() => {
     if (!gastosData) return [];
     return gastosData.pages?.flat() || [];
   }, [gastosData]);
 
-  // Aggregate by category on the frontend
+  // Transform backend data to chart format (backend already sorts by total desc)
   const datosCategorias = React.useMemo(() => {
-    if (allExpenses.length === 0) return [];
+    if (!Array.isArray(resumenPorCategoriaData) || resumenPorCategoriaData.length === 0) return [];
     
-    const aggregation = allExpenses.reduce((acc, gasto) => {
-      const catName = gasto.categoria_nombre || 'Sin categoría';
-      if (!acc[catName]) {
-        acc[catName] = 0;
-      }
-      acc[catName] += Number(gasto.monto);
-      return acc;
-    }, {});
-
-    return Object.entries(aggregation)
-      .map(([name, value], i) => ({
-        name,
-        value,
-        color: VIBRANT_COLORS[i % VIBRANT_COLORS.length],
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [allExpenses]);
+    return resumenPorCategoriaData.map((item, i) => ({
+      name: item.categoria || 'Sin categoría',
+      value: Number(item.total || 0),
+      color: VIBRANT_COLORS[i % VIBRANT_COLORS.length],
+    }));
+  }, [resumenPorCategoriaData]);
 
   // Recent 5 expenses
   const gastosRecientes = React.useMemo(() => {
@@ -329,7 +317,7 @@ const DashboardPage = () => {
             <h3 className="font-bold text-gray-900">Distribución por Categoría</h3>
           </div>
           <div className="relative w-full" style={{ height: 260 }}>
-            {gastosLoading ? (
+            {(gastosLoading || categoriasLoading) ? (
                <div className="h-full w-full flex items-center justify-center">
                  <div className="w-32 h-32 bg-gray-50 animate-pulse rounded-full" />
                </div>

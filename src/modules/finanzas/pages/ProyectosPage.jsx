@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
-import { useCreateProyecto } from '../../../hooks/mutations/finanzas';
-import { proyectosAPI } from '../../../api';
+import { useCreateProyecto, useExportPDFProyecto } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, SkeletonCard, Toast } from '../../../components/common';
 import {
   Plus,
@@ -19,6 +18,7 @@ const ProyectosPage = () => {
   const { proyectos, proyectoActivo, seleccionarProyecto, loading } = useProyecto();
   const { isAdmin } = useAuth();
   const createProyecto = useCreateProyecto();
+  const exportPDF = useExportPDFProyecto();
   
   const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -61,7 +61,7 @@ const ProyectosPage = () => {
       if (filtro === 'mes_actual') params.mes_actual = true;
       if (filtro === 'mes_anterior') params.mes_anterior = true;
       
-      const response = await proyectosAPI.exportarPDF(proyecto.id, params);
+      const response = await exportPDF.mutateAsync({ id: proyecto.id, params });
       
       // Crear blob y descargar
       const blob = new Blob([response.data], { type: 'application/pdf' });
