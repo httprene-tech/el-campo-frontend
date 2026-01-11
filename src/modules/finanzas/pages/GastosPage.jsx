@@ -22,7 +22,7 @@ import {
 
 const GastosPage = () => {
   const { proyectoActivo, actualizarProyecto } = useProyecto();
-  const { canRegister } = useAuth();
+  const { canRegister, user } = useAuth();
   const queryClient = useQueryClient();
   
   // React Query hooks
@@ -264,7 +264,7 @@ const GastosPage = () => {
                     {gasto.metodo_pago}
                   </span>
                   
-                  {canRegister() && (
+                  {canRegister() && gasto.usuario === user?.user_id && (
                     <button
                       onClick={() => handleDelete(gasto.id)}
                       className="p-2 -mr-2 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -343,7 +343,7 @@ const GastosPage = () => {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {canRegister() && (
+                      {canRegister() && gasto.usuario === user?.user_id && (
                         <button
                           onClick={() => handleDelete(gasto.id)}
                           className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
