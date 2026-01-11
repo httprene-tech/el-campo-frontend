@@ -36,14 +36,16 @@ const GastosPage = () => {
   const createGasto = useCreateGasto();
   const deleteGasto = useDeleteGasto();
   
-  // Pull to Refresh
+  const [modalOpen, setModalOpen] = useState(false);
+  
+  // Pull to Refresh - deshabilitado cuando el modal está abierto
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['gastos'] });
   };
   
   const { isRefreshing, pullProgress, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(
     handleRefresh,
-    { threshold: 80 }
+    { threshold: 80, enabled: !modalOpen }
   );
   
   // Extraer datos
@@ -58,7 +60,6 @@ const GastosPage = () => {
   const categorias = useMemo(() => extractApiData(categoriasData), [categoriasData]);
   const proveedores = useMemo(() => extractApiData(proveedoresData), [proveedoresData]);
   
-  const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
