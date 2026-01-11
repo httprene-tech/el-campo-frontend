@@ -14,7 +14,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from 'recharts';
 import {
   Wallet,
@@ -26,7 +25,7 @@ import {
   Egg,
 } from 'lucide-react';
 import { formatCurrency, formatDateShort, formatPercentage } from '../../../utils/formatters';
-import { CHART_COLORS } from '../../../utils/constants';
+
 
 const VIBRANT_COLORS = [
   '#10b981', // Emerald 500
@@ -276,9 +275,9 @@ const DashboardPage = () => {
               <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Inversión Bs</span>
             </div>
           </div>
-          <div className="p-6" style={{ height: 320 }}>
+          <div className="relative w-full" style={{ height: 320 }}>
             {resumenLoading ? (
-               <div className="h-full w-full bg-gray-50 animate-pulse rounded-2xl" />
+               <div className="h-full w-full bg-gray-50 animate-pulse" />
             ) : datosAreaChart.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={datosAreaChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -329,9 +328,11 @@ const DashboardPage = () => {
           <div className="px-6 py-4 border-b border-gray-50">
             <h3 className="font-bold text-gray-900">Distribución por Categoría</h3>
           </div>
-          <div className="p-6 flex-1" style={{ height: 260 }}>
+          <div className="relative w-full" style={{ height: 260 }}>
             {gastosLoading ? (
-               <div className="h-full w-full bg-gray-50 animate-pulse rounded-full" />
+               <div className="h-full w-full flex items-center justify-center">
+                 <div className="w-32 h-32 bg-gray-50 animate-pulse rounded-full" />
+               </div>
             ) : datosCategorias.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -340,8 +341,8 @@ const DashboardPage = () => {
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={8}
+                    outerRadius={80}
+                    paddingAngle={5}
                     dataKey="value"
                     animationBegin={200}
                     animationDuration={1200}
@@ -350,7 +351,8 @@ const DashboardPage = () => {
                       <Cell 
                         key={`cell-${index}`} 
                         fill={entry.color} 
-                        strokeWidth={0}
+                        strokeWidth={2}
+                        stroke="#ffffff"
                         className="hover:opacity-80 transition-opacity"
                       />
                     ))}
@@ -361,17 +363,17 @@ const DashboardPage = () => {
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-gray-300">
                 <Egg className="w-12 h-12 mb-2 opacity-20" />
-                <p className="text-sm font-medium text-center">Registrar gastos para<br/>ver categorías</p>
+                <p className="text-sm font-medium text-center px-6">Registra gastos para<br/>ver la distribución</p>
               </div>
             )}
           </div>
-          <div className="px-6 pb-6 mt-auto">
-             <div className="grid grid-cols-2 gap-3">
-                {datosCategorias.slice(0, 4).map((cat, i) => (
-                  <div key={i} className="flex items-center gap-2">
+          <div className="px-6 pb-6 mt-auto border-t border-gray-50 pt-4">
+             <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-2">
+                {datosCategorias.slice(0, 6).map((cat, i) => (
+                  <div key={i} className="flex items-center gap-2 min-w-0">
                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black text-gray-900 truncate leading-tight uppercase">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black text-gray-700 truncate leading-tight uppercase">
                         {cat.name}
                       </p>
                       <p className="text-[9px] text-gray-400 font-bold leading-tight">
