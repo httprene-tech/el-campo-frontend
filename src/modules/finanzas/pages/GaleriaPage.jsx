@@ -87,7 +87,9 @@ const FotoCard = React.memo(({ foto, onClick }) => (
           <p className="text-white text-sm font-medium truncate">{foto.titulo}</p>
         )}
         <p className="text-white/70 text-xs">
-          {new Date(foto.fecha_subida).toLocaleDateString('es-BO')}
+          {(foto.fecha_foto || foto.creado_en) 
+            ? new Date(foto.fecha_foto || foto.creado_en).toLocaleDateString('es-BO')
+            : 'Sin fecha'}
         </p>
       </div>
     </div>
@@ -465,11 +467,13 @@ const GaleriaPage = () => {
               <p className="text-white font-medium">{modalFoto.titulo}</p>
             )}
             <p className="text-white/60 text-sm">
-              {new Date(modalFoto.fecha_subida).toLocaleDateString('es-BO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+              {(modalFoto.fecha_foto || modalFoto.creado_en)
+                ? new Date(modalFoto.fecha_foto || modalFoto.creado_en).toLocaleDateString('es-BO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                : 'Sin fecha'}
             </p>
           </div>
         </div>
