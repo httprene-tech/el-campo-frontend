@@ -49,9 +49,10 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => 
 
 const DashboardPage = () => {
   const { proyectoActivo, loading: proyectoLoading } = useProyecto();
-  const { user } = userAuth ? useAuth() : { user: null }; // Guard if useAuth fails
+  const { user } = useAuth();
   
   // React Query hooks - Fetching a larger page size for better aggregation if needed
+
   // However, we'll work with what useGastos provides (infinite query)
   const { data: gastosData, isLoading: gastosLoading } = useGastos(
     proyectoActivo ? { proyecto: proyectoActivo.id, page_size: 100 } : {}
@@ -91,17 +92,16 @@ const DashboardPage = () => {
     return allExpenses.slice(0, 5);
   }, [allExpenses]);
 
-  const resumenMensual = Array.isArray(resumenMensualData) ? resumenMensualData : [];
-
   // Data for Area Chart
   const datosAreaChart = React.useMemo(() => {
+    const resumenMensual = Array.isArray(resumenMensualData) ? resumenMensualData : [];
     return [...resumenMensual]
       .sort((a, b) => new Date(a.mes) - new Date(b.mes))
       .map(mes => ({
         mesRepo: new Date(mes.mes).toLocaleDateString('es-BO', { month: 'short', year: '2-digit' }),
         total: Number(mes.total),
       }));
-  }, [resumenMensual]);
+  }, [resumenMensualData]);
 
   // Loading state for project
   if (proyectoLoading) {
