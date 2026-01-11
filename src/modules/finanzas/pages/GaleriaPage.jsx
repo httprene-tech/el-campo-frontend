@@ -215,18 +215,30 @@ const PhotoViewer = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black z-50 flex flex-col"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+      className="fixed inset-0 bg-black z-[9999] flex flex-col"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        animation: 'photoViewerFadeIn 0.3s ease-out forwards',
       }}
     >
-      {/* Header con acciones */}
-      <div className="flex items-center justify-between p-3 bg-gradient-to-b from-black/50 to-transparent absolute top-0 left-0 right-0 z-10">
+      {/* Header con botón de regresar prominente */}
+      <div 
+        className="flex items-center justify-between px-3 py-2 bg-black/60 backdrop-blur-md"
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
+      >
+        {/* Botón regresar - MÁS VISIBLE */}
         <button 
-          className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all"
+          className="flex items-center gap-2 px-3 py-2.5 bg-white/15 hover:bg-white/25 active:bg-white/10 rounded-xl transition-all active:scale-95"
           onClick={onClose}
         >
-          <X className="w-6 h-6" />
+          <ChevronLeft className="w-6 h-6 text-white" />
+          <span className="text-white font-medium text-sm">Volver</span>
         </button>
         
         {/* Contador de fotos */}
@@ -320,7 +332,10 @@ const PhotoViewer = ({
       )}
       
       {/* Footer con acciones y thumbnails */}
-      <div className="bg-gradient-to-t from-black/80 to-transparent pt-6 pb-4 px-4 absolute bottom-0 left-0 right-0">
+      <div 
+        className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-6 px-4 absolute bottom-0 left-0 right-0"
+        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+      >
         {/* Thumbnails horizontales */}
         <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
           {fotos.map((f, idx) => (
@@ -815,8 +830,25 @@ const GaleriaPage = () => {
           from { opacity: 0; }
           to { opacity: 1; }
         }
+        @keyframes photoViewerFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
         .animate-fade-in {
           animation: fade-in 0.2s ease-out forwards;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
