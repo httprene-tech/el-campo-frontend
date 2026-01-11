@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { useAlbumes, useFotos } from '../../../hooks/queries/finanzas';
 import { useCreateAlbum, useUploadFoto, useDeleteFoto, useDeleteAlbum } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 
 // Componente memoizado para tarjeta de álbum
-const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl }) => (
+const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl, userId }) => (
   <div
     className="group relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
     onClick={onClick}
@@ -39,17 +40,19 @@ const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl }) => (
       )}
       
       {/* Overlay con acciones */}
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(album.id);
-          }}
-          className="p-2 bg-white rounded-full hover:bg-red-50"
-        >
-          <Trash2 className="w-5 h-5 text-red-500" />
-        </button>
-      </div>
+      {album.creado_por === userId && (
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(album.id);
+            }}
+            className="p-2 bg-white rounded-full hover:bg-red-50"
+          >
+            <Trash2 className="w-5 h-5 text-red-500" />
+          </button>
+        </div>
+      )}
     </div>
 
     {/* Info */}
@@ -94,6 +97,8 @@ const FotoCard = React.memo(({ foto, onClick }) => (
 FotoCard.displayName = 'FotoCard';
 
 const GaleriaPage = () => {
+  const { user } = useAuth();
+  
   // Helper para resolver URLs de imágenes
   const getMediaUrl = (url) => {
     if (!url) return null;
@@ -261,6 +266,7 @@ const GaleriaPage = () => {
               onClick={() => setAlbumActivo(album)}
               onDelete={handleDeleteAlbum}
               getMediaUrl={getMediaUrl}
+              userId={user?.user_id}
             />
           ))}
 
@@ -428,16 +434,18 @@ const GaleriaPage = () => {
               </button>
               
               {/* Eliminar */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteFoto(modalFoto.id);
-                }}
-                className="p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-colors"
-                title="Eliminar"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              {modalFoto.subido_por === user?.user_id && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFoto(modalFoto.id);
+                  }}
+                  className="p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-colors"
+                  title="Eliminar"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
           

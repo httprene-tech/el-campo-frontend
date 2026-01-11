@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { useCarpetas, useDocumentos } from '../../../hooks/queries/finanzas';
 import { useCreateCarpeta, useDeleteCarpeta, useUploadDocumento, useDeleteDocumento } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
@@ -49,7 +50,7 @@ const CarpetaCard = React.memo(({ carpeta, onClick, onDelete }) => (
 CarpetaCard.displayName = 'CarpetaCard';
 
 // Componente memoizado para fila de documento
-const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete }) => (
+const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete, userId }) => (
   <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
     <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
       {getFileIcon(doc.tipo)}
@@ -73,12 +74,14 @@ const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete }) => (
       >
         <Download className="w-5 h-5" />
       </a>
-      <button
-        onClick={() => onDelete(doc.id)}
-        className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
-      >
-        <Trash2 className="w-5 h-5" />
-      </button>
+      {doc.subido_por === userId && (
+        <button
+          onClick={() => onDelete(doc.id)}
+          className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      )}
     </div>
   </div>
 ));
@@ -86,6 +89,7 @@ const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete }) => (
 DocumentoRow.displayName = 'DocumentoRow';
 
 const DocumentosPage = () => {
+  const { user } = useAuth();
   const [carpetaActiva, setCarpetaActiva] = useState(null);
   const [modalCarpeta, setModalCarpeta] = useState(false);
   const [modalDocumento, setModalDocumento] = useState(false);
@@ -333,6 +337,7 @@ const DocumentosPage = () => {
                 doc={doc}
                 getFileIcon={getFileIcon}
                 onDelete={handleDeleteDocumento}
+                userId={user?.user_id}
               />
             ))
           ) : (
