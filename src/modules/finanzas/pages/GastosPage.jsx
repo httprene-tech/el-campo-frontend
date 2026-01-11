@@ -1,9 +1,12 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useGastos, useCategorias, useProveedores } from '../../../hooks/queries/finanzas';
 import { useCreateGasto, useDeleteGasto } from '../../../hooks/mutations/finanzas';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { Card, Button, BottomSheet, Input, Select, LoadingSpinner, Toast, FAB } from '../../../components/common';
+import usePullToRefresh, { PullToRefreshIndicator } from '../../../hooks/usePullToRefresh';
+import { hapticSuccess, hapticError } from '../../../utils/haptic';
 import { extractApiData } from '../../../utils/formatters';
 import {
   Plus,
@@ -20,8 +23,9 @@ import {
 const GastosPage = () => {
   const { proyectoActivo, actualizarProyecto } = useProyecto();
   const { canRegister } = useAuth();
+  const queryClient = useQueryClient();
   
-  // React Query hooks - reemplazan useEffect + fetch
+  // React Query hooks
   const { data: gastosData, isLoading: isLoadingGastos } = useGastos(
     proyectoActivo ? { proyecto: proyectoActivo.id } : {}
   );
@@ -32,10 +36,19 @@ const GastosPage = () => {
   const createGasto = useCreateGasto();
   const deleteGasto = useDeleteGasto();
   
-  // Extraer datos de las respuestas
+  // Pull to Refresh
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['gastos'] });
+  };
+  
+  const { isRefreshing, pullProgress, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(
+    handleRefresh,
+    { threshold: 80 }
+  );
+  
+  // Extraer datos
   const gastos = useMemo(() => {
     if (!gastosData) return [];
-    // useGastos usa useInfiniteQuery, aplanar páginas
     if (gastosData.pages) {
       return gastosData.pages.flat();
     }
@@ -80,7 +93,6 @@ const GastosPage = () => {
     const file = e.target.files[0];
     if (file) {
       setFormData({...formData, imagen_comprobante: file});
-      // Crear preview
       const reader = new FileReader();
       reader.onload = (e) => setImagenPreview(e.target.result);
       reader.readAsDataURL(file);
@@ -104,11 +116,13 @@ const GastosPage = () => {
         proveedor_rel: formData.proveedor_rel || null,
       });
       
+      hapticSuccess(); // Vibración de éxito
       showToast('Gasto registrado correctamente', 'success');
       setModalOpen(false);
       resetForm();
       actualizarProyecto();
     } catch (error) {
+      hapticError(); // Vibración de error
       const errorMsg = error.response?.data?.error || 'Error al registrar el gasto';
       showToast(errorMsg, 'error');
     } finally {
@@ -121,9 +135,11 @@ const GastosPage = () => {
     
     try {
       await deleteGasto.mutateAsync(id);
+      hapticSuccess();
       showToast('Gasto eliminado', 'success');
       actualizarProyecto();
     } catch (error) {
+      hapticError();
       showToast('Error al eliminar', 'error');
     }
   };
@@ -156,15 +172,24 @@ const GastosPage = () => {
   if (loading) return <LoadingSpinner text="Cargando gastos..." />;
 
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator progress={pullProgress} isRefreshing={isRefreshing} />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gastos</h1>
           <p className="text-gray-500">Registro de gastos del proyecto</p>
         </div>
+        {/* Desktop button - hidden on mobile (FAB shows instead) */}
         {canRegister() && (
-          <Button icon={Plus} onClick={() => setModalOpen(true)}>
+          <Button icon={Plus} onClick={() => setModalOpen(true)} className="hidden sm:flex">
             Nuevo Gasto
           </Button>
         )}
@@ -341,12 +366,21 @@ const GastosPage = () => {
         </div>
       </Card>
 
-      {/* Modal Nuevo Gasto */}
-      <Modal
+      {/* FAB - Solo móvil */}
+      {canRegister() && (
+        <FAB 
+          onClick={() => setModalOpen(true)} 
+          label="Nuevo Gasto"
+          icon={Plus}
+        />
+      )}
+
+      {/* BottomSheet Modal */}
+      <BottomSheet
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Registrar Gasto"
-        size="lg"
+        height="auto"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -411,7 +445,7 @@ const GastosPage = () => {
             />
           </div>
 
-          {/* Subir foto de comprobante */}
+          {/* Subir foto */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Foto del comprobante (opcional)
@@ -478,7 +512,7 @@ const GastosPage = () => {
                 <textarea
                   value={formData.notas_contexto}
                   onChange={(e) => setFormData({...formData, notas_contexto: e.target.value})}
-                  placeholder="Ej: Tengo el comprobante del retiro del 5 de enero, se usó para mano de obra..."
+                  placeholder="Ej: Tengo el comprobante del retiro del 5 de enero..."
                   className="w-full px-4 py-2.5 rounded-xl border border-amber-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   rows={3}
                 />
@@ -495,7 +529,7 @@ const GastosPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>

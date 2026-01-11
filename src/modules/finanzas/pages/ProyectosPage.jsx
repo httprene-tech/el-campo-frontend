@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
+import { useCreateProyecto } from '../../../hooks/mutations/finanzas';
 import { proyectosAPI } from '../../../api';
-import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
+import { Card, Button, Modal, Input, SkeletonCard, Toast } from '../../../components/common';
 import {
   Plus,
   FolderOpen,
@@ -15,10 +16,11 @@ import {
 } from 'lucide-react';
 
 const ProyectosPage = () => {
-  const { proyectos, proyectoActivo, cargarProyectos, seleccionarProyecto, loading } = useProyecto();
+  const { proyectos, proyectoActivo, seleccionarProyecto, loading } = useProyecto();
   const { isAdmin } = useAuth();
+  const createProyecto = useCreateProyecto();
+  
   const [modalOpen, setModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [downloading, setDownloading] = useState(null);
   
@@ -36,10 +38,9 @@ const ProyectosPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
 
     try {
-      await proyectosAPI.create(formData);
+      await createProyecto.mutateAsync(formData);
       showToast('Proyecto creado correctamente', 'success');
       setModalOpen(false);
       setFormData({
@@ -48,11 +49,8 @@ const ProyectosPage = () => {
         fecha_inicio: new Date().toISOString().split('T')[0],
         descripcion: '',
       });
-      cargarProyectos();
     } catch (error) {
       showToast('Error al crear proyecto', 'error');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -82,7 +80,21 @@ const ProyectosPage = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner text="Cargando proyectos..." />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-gray-100 rounded mt-2 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -261,7 +273,7 @@ const ProyectosPage = () => {
             <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" loading={submitting} className="flex-1">
+            <Button type="submit" loading={createProyecto.isPending} className="flex-1">
               Crear Proyecto
             </Button>
           </div>

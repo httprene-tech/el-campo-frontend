@@ -62,15 +62,6 @@ export const formatPercentage = (value, decimals = 1) => {
 };
 
 /**
- * Trunca un texto a una longitud máxima
- */
-export const truncateText = (text, maxLength = 50) => {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return `${text.substring(0, maxLength)}...`;
-};
-
-/**
  * Extracts array data from API response that may be paginated (DRF format)
  * Handles: plain arrays, { results: [] }, or any object with results property
  */
