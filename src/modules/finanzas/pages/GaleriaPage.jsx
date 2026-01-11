@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useAlbumes, useFotos } from '../../../hooks/queries/finanzas';
 import { useCreateAlbum, useUploadFoto, useDeleteFoto, useDeleteAlbum } from '../../../hooks/mutations/finanzas';
@@ -12,46 +12,64 @@ import {
   Trash2,
   X,
   ChevronLeft,
+  ChevronRight,
   Camera,
   Share2,
   Download,
   MessageCircle,
+  ZoomIn,
+  ZoomOut,
+  Heart,
+  Info,
+  Grid,
+  LayoutGrid,
 } from 'lucide-react';
 
-// Componente memoizado para tarjeta de álbum
+// Skeleton para carga de fotos
+const PhotoSkeleton = () => (
+  <div className="aspect-square bg-gray-200 rounded-xl animate-pulse" />
+);
+
+// Componente memoizado para tarjeta de álbum mejorado
 const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl, userId }) => (
   <div
-    className="group relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
+    className="group relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl transition-all duration-300 active:scale-[0.98]"
     onClick={onClick}
   >
-    {/* Portada */}
-    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
+    {/* Portada con efecto parallax suave */}
+    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
       {album.portada ? (
         <img 
           loading="lazy"
           src={getMediaUrl(album.portada)} 
           alt={album.nombre}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <Folder className="w-16 h-16 text-gray-300" />
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
+          <Folder className="w-16 h-16 text-emerald-300" />
         </div>
       )}
       
-      {/* Overlay con acciones */}
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      {/* Badge de cantidad */}
+      <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/40 backdrop-blur-sm rounded-full">
+        <span className="text-white text-xs font-medium">{album.cantidad_fotos}</span>
+      </div>
+      
+      {/* Botón eliminar */}
       {album.creado_por === userId && (
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(album.id);
-            }}
-            className="p-2 bg-white rounded-full hover:bg-red-50"
-          >
-            <Trash2 className="w-5 h-5 text-red-500" />
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(album.id);
+          }}
+          className="absolute top-3 left-3 p-2 bg-red-500/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-500 hover:scale-110"
+        >
+          <Trash2 className="w-4 h-4 text-white" />
+        </button>
       )}
     </div>
 
@@ -67,42 +85,374 @@ const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl, userId })
 
 AlbumCard.displayName = 'AlbumCard';
 
-// Componente memoizado para foto
-const FotoCard = React.memo(({ foto, onClick }) => (
-  <div
-    className="group relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
-    onClick={onClick}
-  >
-    <img 
-      loading="lazy"
-      src={foto.imagen} 
-      alt={foto.titulo || 'Foto'}
-      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-    />
-    
-    {/* Overlay con fecha */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        {foto.titulo && (
-          <p className="text-white text-sm font-medium truncate">{foto.titulo}</p>
-        )}
-        <p className="text-white/70 text-xs">
-          {(foto.fecha_foto || foto.creado_en) 
-            ? new Date(foto.fecha_foto || foto.creado_en).toLocaleDateString('es-BO')
-            : 'Sin fecha'}
-        </p>
+// Componente memoizado para foto con animación
+const FotoCard = React.memo(({ foto, onClick, index }) => {
+  const [loaded, setLoaded] = useState(false);
+  
+  return (
+    <div
+      className="group relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
+      onClick={onClick}
+      style={{ 
+        animationDelay: `${index * 50}ms`,
+        animation: 'fadeInUp 0.4s ease-out forwards',
+        opacity: 0,
+      }}
+    >
+      {!loaded && <PhotoSkeleton />}
+      <img 
+        loading="lazy"
+        src={foto.imagen} 
+        alt={foto.titulo || 'Foto'}
+        className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+      />
+      
+      {/* Overlay con gradiente mejorado */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+        <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+          {foto.titulo && (
+            <p className="text-white text-sm font-medium truncate">{foto.titulo}</p>
+          )}
+          <p className="text-white/70 text-xs">
+            {(foto.fecha_foto || foto.creado_en) 
+              ? new Date(foto.fecha_foto || foto.creado_en).toLocaleDateString('es-BO')
+              : 'Sin fecha'}
+          </p>
+        </div>
+      </div>
+      
+      {/* Icono de zoom */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
+        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+          <ZoomIn className="w-6 h-6 text-white" />
+        </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 FotoCard.displayName = 'FotoCard';
+
+// Componente de visor de fotos a pantalla completa mejorado
+const PhotoViewer = ({ 
+  foto, 
+  fotos, 
+  onClose, 
+  onNext, 
+  onPrev, 
+  onDelete, 
+  onShare, 
+  onDownload, 
+  canDelete,
+  albumNombre 
+}) => {
+  const [zoom, setZoom] = useState(1);
+  const [showInfo, setShowInfo] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const currentIndex = fotos.findIndex(f => f.id === foto.id);
+  const hasNext = currentIndex < fotos.length - 1;
+  const hasPrev = currentIndex > 0;
+
+  // Gestos de swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && hasNext) {
+      onNext();
+    } else if (isRightSwipe && hasPrev) {
+      onPrev();
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' && hasNext) onNext();
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev();
+      if (e.key === 'Escape') onClose();
+      if (e.key === '+' || e.key === '=') setZoom(z => Math.min(z + 0.5, 3));
+      if (e.key === '-') setZoom(z => Math.max(z - 0.5, 1));
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasNext, hasPrev, onNext, onPrev, onClose]);
+
+  // Reset zoom on photo change
+  useEffect(() => {
+    setZoom(1);
+    setImageLoaded(false);
+  }, [foto.id]);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Sin fecha';
+    return new Date(dateStr).toLocaleDateString('es-BO', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black z-50 flex flex-col"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      {/* Header con acciones */}
+      <div className="flex items-center justify-between p-3 bg-gradient-to-b from-black/50 to-transparent absolute top-0 left-0 right-0 z-10">
+        <button 
+          className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all"
+          onClick={onClose}
+        >
+          <X className="w-6 h-6" />
+        </button>
+        
+        {/* Contador de fotos */}
+        <div className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full">
+          <span className="text-white text-sm font-medium">
+            {currentIndex + 1} / {fotos.length}
+          </span>
+        </div>
+        
+        {/* Acciones */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className={`p-2.5 rounded-full transition-all ${showInfo ? 'bg-white/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+          >
+            <Info className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Área de imagen con gestos */}
+      <div 
+        className="flex-1 flex items-center justify-center overflow-hidden relative"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Botón anterior */}
+        {hasPrev && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onPrev(); }}
+            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all z-10"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+        )}
+        
+        {/* Imagen */}
+        <div className="relative w-full h-full flex items-center justify-center p-4">
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
+          <img 
+            src={foto.imagen} 
+            alt={foto.titulo || 'Foto'}
+            className={`max-w-full max-h-full object-contain transition-all duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            style={{ 
+              transform: `scale(${zoom})`,
+              cursor: zoom > 1 ? 'grab' : 'default'
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onLoad={() => setImageLoaded(true)}
+            draggable={false}
+          />
+        </div>
+        
+        {/* Botón siguiente */}
+        {hasNext && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNext(); }}
+            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all z-10"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+        )}
+      </div>
+      
+      {/* Panel de información */}
+      {showInfo && (
+        <div className="absolute top-16 right-4 w-72 bg-black/80 backdrop-blur-lg rounded-xl p-4 text-white z-20 animate-fade-in">
+          <h4 className="font-semibold mb-3">Información</h4>
+          <div className="space-y-2 text-sm">
+            {foto.titulo && (
+              <div>
+                <span className="text-white/60">Título:</span>
+                <p className="font-medium">{foto.titulo}</p>
+              </div>
+            )}
+            <div>
+              <span className="text-white/60">Fecha:</span>
+              <p className="font-medium">{formatDate(foto.fecha_foto || foto.creado_en)}</p>
+            </div>
+            <div>
+              <span className="text-white/60">Álbum:</span>
+              <p className="font-medium">{albumNombre}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Footer con acciones y thumbnails */}
+      <div className="bg-gradient-to-t from-black/80 to-transparent pt-6 pb-4 px-4 absolute bottom-0 left-0 right-0">
+        {/* Thumbnails horizontales */}
+        <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
+          {fotos.map((f, idx) => (
+            <button
+              key={f.id}
+              onClick={() => {
+                if (idx > currentIndex) onNext();
+                else if (idx < currentIndex) onPrev();
+              }}
+              className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 ${
+                f.id === foto.id 
+                  ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105' 
+                  : 'opacity-50 hover:opacity-80'
+              }`}
+            >
+              <img 
+                src={f.imagen} 
+                alt="" 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+        
+        {/* Acciones principales */}
+        <div className="flex items-center justify-center gap-3">
+          {/* Zoom */}
+          <div className="flex items-center gap-1 bg-white/10 rounded-full p-1">
+            <button
+              onClick={() => setZoom(z => Math.max(z - 0.5, 1))}
+              disabled={zoom <= 1}
+              className="p-2 text-white/80 hover:text-white disabled:opacity-30 transition-all"
+            >
+              <ZoomOut className="w-5 h-5" />
+            </button>
+            <span className="text-white/60 text-xs w-12 text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(z => Math.min(z + 0.5, 3))}
+              disabled={zoom >= 3}
+              className="p-2 text-white/80 hover:text-white disabled:opacity-30 transition-all"
+            >
+              <ZoomIn className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="w-px h-8 bg-white/20" />
+          
+          {/* WhatsApp */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onShare(foto, 'whatsapp'); }}
+            className="p-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-105 active:scale-95"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
+          
+          {/* Compartir */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onShare(foto, 'native'); }}
+            className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+          
+          {/* Descargar */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDownload(foto); }}
+            className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+          
+          {/* Eliminar */}
+          {canDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(foto.id); }}
+              className="p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-all hover:scale-105 active:scale-95"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Indicadores de swipe en móvil */}
+      {(hasPrev || hasNext) && (
+        <div className="md:hidden absolute top-1/2 left-0 right-0 flex justify-between px-2 pointer-events-none">
+          {hasPrev && (
+            <div className="p-2 bg-white/10 rounded-full animate-pulse">
+              <ChevronLeft className="w-5 h-5 text-white/50" />
+            </div>
+          )}
+          {!hasPrev && <div />}
+          {hasNext && (
+            <div className="p-2 bg-white/10 rounded-full animate-pulse">
+              <ChevronRight className="w-5 h-5 text-white/50" />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* CSS para animación */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const GaleriaPage = () => {
   const { user } = useAuth();
   
   // Helper para resolver URLs de imágenes
-  const getMediaUrl = (url) => {
+  const getMediaUrl = useCallback((url) => {
     if (!url) return null;
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
     
@@ -111,13 +461,14 @@ const GaleriaPage = () => {
     const path = url.startsWith('/') ? url : `/${url}`;
     
     return `${rootUrl}${path}`;
-  };
+  }, []);
 
   const [albumActivo, setAlbumActivo] = useState(null);
   const [modalAlbum, setModalAlbum] = useState(false);
-  const [modalFoto, setModalFoto] = useState(null);
+  const [fotoActiva, setFotoActiva] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [gridSize, setGridSize] = useState('normal'); // 'compact' | 'normal'
   const fileInputRef = useRef(null);
   
   const [nuevoAlbum, setNuevoAlbum] = useState({ nombre: '', descripcion: '' });
@@ -137,10 +488,10 @@ const GaleriaPage = () => {
   
   const loading = loadingAlbumes;
 
-  const showToast = (message, type) => {
+  const showToast = useCallback((message, type) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
   const handleCrearAlbum = async (e) => {
     e.preventDefault();
@@ -183,7 +534,18 @@ const GaleriaPage = () => {
     try {
       await deleteFotoMutation.mutateAsync(id);
       showToast('Foto eliminada', 'success');
-      setModalFoto(null);
+      
+      // Navegar a la siguiente foto o cerrar
+      const idx = fotos.findIndex(f => f.id === id);
+      if (fotos.length > 1) {
+        if (idx < fotos.length - 1) {
+          setFotoActiva(fotos[idx + 1]);
+        } else {
+          setFotoActiva(fotos[idx - 1]);
+        }
+      } else {
+        setFotoActiva(null);
+      }
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -201,35 +563,32 @@ const GaleriaPage = () => {
     }
   };
 
-  // Compartir foto por WhatsApp
-  const compartirWhatsApp = (foto) => {
-    const mensaje = `📸 Foto del proyecto: ${albumActivo?.nombre || 'Galería'}\n${foto.imagen}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-  };
-
-  // Compartir nativo (Web Share API)
-  const compartirNativo = async (foto) => {
-    if (!navigator.share) {
-      compartirWhatsApp(foto);
-      return;
-    }
+  // Compartir foto
+  const handleShare = useCallback(async (foto, method) => {
+    const shareUrl = foto.imagen;
+    const shareText = `📸 Foto del proyecto: ${albumActivo?.nombre || 'Galería'}`;
     
-    try {
-      await navigator.share({
-        title: foto.titulo || 'Foto del proyecto',
-        text: `Foto de ${albumActivo?.nombre || 'la galería'}`,
-        url: foto.imagen,
-      });
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        compartirWhatsApp(foto);
+    if (method === 'whatsapp') {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, '_blank');
+    } else if (navigator.share) {
+      try {
+        await navigator.share({
+          title: foto.titulo || 'Foto del proyecto',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, '_blank');
+        }
       }
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, '_blank');
     }
-  };
+  }, [albumActivo]);
 
   // Descargar foto
-  const descargarFoto = async (foto) => {
+  const handleDownload = useCallback(async (foto) => {
     try {
       const response = await fetch(foto.imagen);
       const blob = await response.blob();
@@ -242,7 +601,22 @@ const GaleriaPage = () => {
     } catch (error) {
       window.open(foto.imagen, '_blank');
     }
-  };
+  }, []);
+
+  // Navegación de fotos
+  const handleNextFoto = useCallback(() => {
+    const idx = fotos.findIndex(f => f.id === fotoActiva.id);
+    if (idx < fotos.length - 1) {
+      setFotoActiva(fotos[idx + 1]);
+    }
+  }, [fotos, fotoActiva]);
+
+  const handlePrevFoto = useCallback(() => {
+    const idx = fotos.findIndex(f => f.id === fotoActiva.id);
+    if (idx > 0) {
+      setFotoActiva(fotos[idx - 1]);
+    }
+  }, [fotos, fotoActiva]);
 
   if (loading) return <LoadingSpinner text="Cargando galería..." />;
 
@@ -253,7 +627,7 @@ const GaleriaPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Galería</h1>
-            <p className="text-gray-500">Álbumes de fotos del proyecto</p>
+            <p className="text-gray-500">{albumes.length} álbum{albumes.length !== 1 && 'es'} de fotos</p>
           </div>
           <Button icon={Plus} onClick={() => setModalAlbum(true)}>
             Nuevo Álbum
@@ -273,11 +647,14 @@ const GaleriaPage = () => {
           ))}
 
           {albumes.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Image className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No hay álbumes creados</p>
-              <Button onClick={() => setModalAlbum(true)} className="mt-4">
-                Crear primer álbum
+            <div className="col-span-full text-center py-16">
+              <div className="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Image className="w-10 h-10 text-emerald-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sin álbumes</h3>
+              <p className="text-gray-500 mb-6">Crea tu primer álbum para organizar las fotos</p>
+              <Button onClick={() => setModalAlbum(true)}>
+                Crear álbum
               </Button>
             </div>
           )}
@@ -333,7 +710,7 @@ const GaleriaPage = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAlbumActivo(null)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -343,6 +720,15 @@ const GaleriaPage = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          {/* Toggle grid size */}
+          <button
+            onClick={() => setGridSize(s => s === 'normal' ? 'compact' : 'normal')}
+            className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
+            title={gridSize === 'normal' ? 'Vista compacta' : 'Vista normal'}
+          >
+            {gridSize === 'normal' ? <LayoutGrid className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+          </button>
+          
           <input
             ref={fileInputRef}
             type="file"
@@ -356,130 +742,83 @@ const GaleriaPage = () => {
             onClick={() => fileInputRef.current?.click()}
             loading={submitting}
           >
-            Subir Fotos
+            <span className="hidden sm:inline">Subir Fotos</span>
+            <span className="sm:hidden">Subir</span>
           </Button>
         </div>
       </div>
 
       {/* Grid de fotos */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {fotos.map((foto) => (
-          <FotoCard
-            key={foto.id}
-            foto={foto}
-            onClick={() => setModalFoto(foto)}
-          />
-        ))}
+      <div className={`grid gap-2 sm:gap-3 ${
+        gridSize === 'compact' 
+          ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6' 
+          : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+      }`}>
+        {loadingFotos ? (
+          Array.from({ length: 8 }).map((_, i) => <PhotoSkeleton key={i} />)
+        ) : (
+          fotos.map((foto, idx) => (
+            <FotoCard
+              key={foto.id}
+              foto={foto}
+              index={idx}
+              onClick={() => setFotoActiva(foto)}
+            />
+          ))
+        )}
 
         {fotos.length === 0 && !loadingFotos && (
-          <Card className="col-span-full text-center py-12">
-            <Camera className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 mb-4">Este álbum está vacío</p>
+          <Card className="col-span-full text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Álbum vacío</h3>
+            <p className="text-gray-500 mb-6">Sube las primeras fotos a este álbum</p>
             <Button onClick={() => fileInputRef.current?.click()}>
-              Subir primera foto
+              Subir fotos
             </Button>
           </Card>
         )}
       </div>
 
-      {/* Modal Vista de Foto con opciones de compartir */}
-      {modalFoto && (
-        <div 
-          className="fixed inset-0 bg-black/90 z-50 flex flex-col"
-          onClick={() => setModalFoto(null)}
-        >
-          {/* Toolbar superior */}
-          <div className="flex items-center justify-between p-4 safe-area-inset-top">
-            <button 
-              className="p-2 text-white/70 hover:text-white transition-colors"
-              onClick={() => setModalFoto(null)}
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            {/* Acciones */}
-            <div className="flex items-center gap-2">
-              {/* Compartir WhatsApp */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  compartirWhatsApp(modalFoto);
-                }}
-                className="p-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
-                title="Enviar por WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </button>
-              
-              {/* Compartir nativo */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  compartirNativo(modalFoto);
-                }}
-                className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors"
-                title="Compartir"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-              
-              {/* Descargar */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  descargarFoto(modalFoto);
-                }}
-                className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors"
-                title="Descargar"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              
-              {/* Eliminar */}
-              {modalFoto.subido_por === user?.user_id && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteFoto(modalFoto.id);
-                  }}
-                  className="p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-colors"
-                  title="Eliminar"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {/* Imagen */}
-          <div className="flex-1 flex items-center justify-center p-4">
-            <img 
-              src={modalFoto.imagen} 
-              alt={modalFoto.titulo || 'Foto'}
-              className="max-w-full max-h-full rounded-lg object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-          
-          {/* Info inferior */}
-          <div className="p-4 safe-area-inset-bottom text-center">
-            {modalFoto.titulo && (
-              <p className="text-white font-medium">{modalFoto.titulo}</p>
-            )}
-            <p className="text-white/60 text-sm">
-              {(modalFoto.fecha_foto || modalFoto.creado_en)
-                ? new Date(modalFoto.fecha_foto || modalFoto.creado_en).toLocaleDateString('es-BO', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })
-                : 'Sin fecha'}
-            </p>
-          </div>
-        </div>
+      {/* Visor de fotos a pantalla completa */}
+      {fotoActiva && (
+        <PhotoViewer
+          foto={fotoActiva}
+          fotos={fotos}
+          onClose={() => setFotoActiva(null)}
+          onNext={handleNextFoto}
+          onPrev={handlePrevFoto}
+          onDelete={handleDeleteFoto}
+          onShare={handleShare}
+          onDownload={handleDownload}
+          canDelete={fotoActiva.subido_por === user?.user_id}
+          albumNombre={albumActivo.nombre}
+        />
       )}
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      
+      {/* CSS global */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
