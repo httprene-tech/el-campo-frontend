@@ -65,7 +65,7 @@ class ComprobanteSerializer(serializers.ModelSerializer):
     """Serializer para comprobantes/fotos de gastos."""
     class Meta:
         model = Comprobante
-        fields = ['id', 'imagen', 'creado_en']
+        fields = ['id', 'gasto', 'imagen', 'creado_en']
 
 
 # ============================================================================
@@ -118,7 +118,8 @@ class GastoListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'proyecto', 'monto', 'descripcion', 'fecha', 
             'categoria', 'categoria_nombre', 'proveedor_rel', 'proveedor_nombre',
-            'metodo_pago', 'es_retroactivo', 'tiene_comprobante', 'creado_en'
+            'metodo_pago', 'es_retroactivo', 'tiene_comprobante', 
+            'imagen_comprobante', 'creado_en', 'usuario'
         ]
 
     def get_tiene_comprobante(self, obj):
@@ -198,7 +199,7 @@ class AlbumListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Album
-        fields = ['id', 'nombre', 'descripcion', 'creado_en', 'cantidad_fotos', 'portada']
+        fields = ['id', 'nombre', 'descripcion', 'creado_en', 'cantidad_fotos', 'portada', 'creado_por']
 
     def get_portada(self, obj):
         """Retorna la URL de la primera foto como portada."""

@@ -10,6 +10,7 @@ import {
   fotosAPI,
   carpetasAPI,
   documentosAPI,
+  comprobantesAPI,
 } from '../../api/modules/finanzas';
 
 // ============================================================================
@@ -166,5 +167,15 @@ export const useDocumentos = (params = {}) => {
       pages: data.pages.map(page => page.data?.results || page.data || []),
       pageParams: data.pageParams,
     }),
+  });
+};
+
+// Comprobantes (fotos de recibos de gastos)
+export const useComprobantes = (gastoId) => {
+  return useQuery({
+    queryKey: ['comprobantes', gastoId],
+    queryFn: () => comprobantesAPI.getAll(gastoId),
+    select: (response) => response.data,
+    enabled: !!gastoId,
   });
 };

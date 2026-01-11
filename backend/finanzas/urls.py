@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     # Finanzas
     ProyectoViewSet, CategoriaViewSet, GastoViewSet, ProveedorViewSet,
+    # Comprobantes
+    ComprobanteViewSet,
     # Socios/Familia
     SocioViewSet,
     # Galería
@@ -21,6 +23,7 @@ router.register(r'proyectos', ProyectoViewSet)
 router.register(r'categorias', CategoriaViewSet)
 router.register(r'gastos', GastoViewSet)
 router.register(r'proveedores', ProveedorViewSet)
+router.register(r'comprobantes', ComprobanteViewSet)
 
 # Socios/Familia
 router.register(r'socios', SocioViewSet)

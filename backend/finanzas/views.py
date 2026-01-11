@@ -25,13 +25,14 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 # Local imports
 from .models import (
-    Proyecto, Categoria, Gasto, Proveedor,
+    Proyecto, Categoria, Gasto, Proveedor, Comprobante,
     Socio, Album, FotoAlbum, CarpetaDocumento, Documento
 )
 from .serializers import (
     ProyectoSerializer, CategoriaSerializer, GastoSerializer, GastoListSerializer, ProveedorSerializer,
     SocioSerializer, AlbumSerializer, AlbumListSerializer, FotoAlbumSerializer,
-    CarpetaDocumentoSerializer, CarpetaDocumentoListSerializer, DocumentoSerializer
+    CarpetaDocumentoSerializer, CarpetaDocumentoListSerializer, DocumentoSerializer,
+    ComprobanteSerializer
 )
 from core.common.mixins import OptimizedQuerySetMixin, FilterByDateMixin
 from .constants import ERROR_PRESUPUESTO_EXCEDIDO
@@ -243,6 +244,29 @@ class DocumentoViewSet(OptimizedQuerySetMixin, FilterByDateMixin, viewsets.Model
     def perform_create(self, serializer):
         """Asigna el usuario que sube el documento."""
         serializer.save(subido_por=self.request.user)
+
+
+# ============================================================================
+# VIEWSETS DE COMPROBANTES
+# ============================================================================
+
+class ComprobanteViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar comprobantes de gastos.
+    Permite subir múltiples fotos a un gasto.
+    """
+    queryset = Comprobante.objects.filter(eliminado=False)
+    serializer_class = ComprobanteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        """Filtra comprobantes por gasto si se especifica."""
+        queryset = super().get_queryset()
+        gasto_id = self.request.query_params.get('gasto')
+        if gasto_id:
+            queryset = queryset.filter(gasto_id=gasto_id)
+        return queryset.select_related('gasto').order_by('-creado_en')
 
 
 # ============================================================================
@@ -496,8 +520,15 @@ class GastoViewSet(OptimizedQuerySetMixin, FilterByDateMixin, viewsets.ModelView
         return queryset
 
     def perform_create(self, serializer):
-        """Inyecta el usuario que registra el gasto."""
-        serializer.save(usuario=self.request.user)
+        """Inyecta el usuario que registra el gasto y crea Comprobante si hay imagen."""
+        gasto = serializer.save(usuario=self.request.user)
+        
+        # Si el gasto tiene imagen_comprobante, crear registro en tabla Comprobante
+        if gasto.imagen_comprobante:
+            Comprobante.objects.create(
+                gasto=gasto,
+                imagen=gasto.imagen_comprobante
+            )
 
     def create(self, request, *args, **kwargs):
         """Valida que no se exceda el presupuesto del proyecto."""

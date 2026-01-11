@@ -45,12 +45,32 @@ export const gastosAPI = {
     // con el boundary correcto cuando se usa FormData
     return apiClient.post('/finanzas/gastos/', formData);
   },
-  update: (id, data) => apiClient.put(`/finanzas/gastos/${id}/`, data),
+  update: (id, data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+      if (data[key] !== null && data[key] !== undefined) {
+        formData.append(key, data[key]);
+      }
+    });
+    return apiClient.put(`/finanzas/gastos/${id}/`, formData);
+  },
   delete: (id) => apiClient.delete(`/finanzas/gastos/${id}/`),
   resumenMensual: (proyectoId) => 
     apiClient.get('/finanzas/gastos/resumen_mensual/', { params: { proyecto: proyectoId } }),
   resumenPorCategoria: (proyectoId) => 
     apiClient.get('/finanzas/gastos/resumen_por_categoria/', { params: { proyecto: proyectoId } }),
+};
+
+// Comprobantes (fotos de recibos de gastos)
+export const comprobantesAPI = {
+  getAll: (gastoId) => apiClient.get('/finanzas/comprobantes/', { params: { gasto: gastoId } }),
+  upload: (gastoId, imagen) => {
+    const formData = new FormData();
+    formData.append('gasto', gastoId);
+    formData.append('imagen', imagen);
+    return apiClient.post('/finanzas/comprobantes/', formData);
+  },
+  delete: (id) => apiClient.delete(`/finanzas/comprobantes/${id}/`),
 };
 
 // Categorías

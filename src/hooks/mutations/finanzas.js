@@ -9,6 +9,7 @@ import {
   fotosAPI,
   carpetasAPI,
   documentosAPI,
+  comprobantesAPI,
 } from '../../api/modules/finanzas';
 
 // ============================================================================
@@ -281,6 +282,29 @@ export const useDeleteDocumento = () => {
     mutationFn: (id) => documentosAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentos'] });
+    },
+  });
+};
+
+// Comprobantes (fotos de recibos de gastos)
+export const useUploadComprobante = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gastoId, imagen }) => comprobantesAPI.upload(gastoId, imagen),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comprobantes', variables.gastoId] });
+      queryClient.invalidateQueries({ queryKey: ['gastos'] });
+    },
+  });
+};
+
+export const useDeleteComprobante = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => comprobantesAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprobantes'] });
+      queryClient.invalidateQueries({ queryKey: ['gastos'] });
     },
   });
 };
