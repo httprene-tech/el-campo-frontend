@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { PAGE_SIZE } from '../../utils/constants';
+import { PAGE_SIZE, STALE_TIMES } from '../../utils/constants';
 import {
   tiposEventoAPI,
   eventosAPI,
@@ -10,12 +10,13 @@ import {
 // QUERIES: CALENDARIO
 // ============================================================================
 
-// Tipos de Evento
+// Tipos de Evento - Datos estáticos, staleTime muy largo
 export const useTiposEvento = () => {
   return useQuery({
     queryKey: ['tipos-evento'],
     queryFn: () => tiposEventoAPI.getAll(),
     select: (response) => response.data?.results || response.data || [],
+    staleTime: STALE_TIMES.STATIC, // 30 minutos
   });
 };
 

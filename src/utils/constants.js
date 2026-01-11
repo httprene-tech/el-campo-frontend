@@ -58,10 +58,24 @@ export const CHART_COLORS = [
   '#059669', '#10b981', '#34d399',
 ];
 
-// Configuración de React Query
+// Configuración de React Query - Base
 export const QUERY_CONFIG = {
-  staleTime: 5 * 60 * 1000, // 5 minutos
+  staleTime: 5 * 60 * 1000, // 5 minutos (default)
   cacheTime: 10 * 60 * 1000, // 10 minutos
   refetchOnWindowFocus: false, // Importante para PWA
   retry: 1,
+};
+
+// StaleTime diferenciado por tipo de datos
+// Datos que cambian poco = staleTime largo
+// Datos que cambian frecuentemente = staleTime corto
+export const STALE_TIMES = {
+  // Datos estáticos / cambian muy poco (30 minutos)
+  STATIC: 30 * 60 * 1000,
+  // Catálogos: categorías, tipos, proveedores (10 minutos)
+  CATALOG: 10 * 60 * 1000,
+  // Datos normales: proyectos, gastos (5 minutos)
+  NORMAL: 5 * 60 * 1000,
+  // Datos dinámicos: recolecciones, movimientos (2 minutos)
+  DYNAMIC: 2 * 60 * 1000,
 };

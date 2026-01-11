@@ -2,7 +2,7 @@ import React from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useGastos, useCategorias, useResumenMensualGastos } from '../../../hooks/queries/finanzas';
-import { Card, LoadingSpinner } from '../../../components/common';
+import { Card, SkeletonCard, SkeletonRow } from '../../../components/common';
 import {
   AreaChart,
   Area,
@@ -47,11 +47,20 @@ const DashboardPage = () => {
     return Array.isArray(allGastos) ? allGastos.slice(0, 5) : [];
   }, [gastosData]);
 
-  // Sin proyecto activo
+  // Sin proyecto activo - Mostrar skeletons
   if (proyectoLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+      <div className="space-y-6">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-gray-100 rounded mt-2 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
@@ -280,8 +289,10 @@ const DashboardPage = () => {
         </div>
         <div className="divide-y divide-gray-50">
           {gastosLoading ? (
-            <div className="p-6 text-center">
-              <Loader2 className="w-5 h-5 text-gray-400 animate-spin mx-auto" />
+            <div className="divide-y divide-gray-50">
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
             </div>
           ) : gastosRecientes.length > 0 ? (
             gastosRecientes.map((gasto) => (

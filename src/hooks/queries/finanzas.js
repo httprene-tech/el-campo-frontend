@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { PAGE_SIZE } from '../../utils/constants';
+import { PAGE_SIZE, STALE_TIMES } from '../../utils/constants';
 import {
   proyectosAPI,
   gastosAPI,
@@ -73,21 +73,23 @@ export const useResumenMensualGastos = (proyectoId) => {
   });
 };
 
-// Categorías
+// Categorías - Datos estáticos, staleTime largo
 export const useCategorias = () => {
   return useQuery({
     queryKey: ['categorias'],
     queryFn: () => categoriasAPI.getAll(),
     select: (response) => response.data,
+    staleTime: STALE_TIMES.CATALOG, // 10 minutos
   });
 };
 
-// Proveedores
+// Proveedores - Datos de catálogo, staleTime medio-largo
 export const useProveedores = () => {
   return useQuery({
     queryKey: ['proveedores'],
     queryFn: () => proveedoresAPI.getAll(),
     select: (response) => response.data,
+    staleTime: STALE_TIMES.CATALOG, // 10 minutos
   });
 };
 
@@ -100,12 +102,13 @@ export const useProveedor = (id) => {
   });
 };
 
-// Socios
+// Socios - Datos de catálogo
 export const useSocios = () => {
   return useQuery({
     queryKey: ['socios'],
     queryFn: () => sociosAPI.getAll(),
     select: (response) => response.data,
+    staleTime: STALE_TIMES.CATALOG, // 10 minutos
   });
 };
 
@@ -115,6 +118,7 @@ export const useAlbumes = () => {
     queryKey: ['albumes'],
     queryFn: () => albumesAPI.getAll(),
     select: (response) => response.data,
+    staleTime: STALE_TIMES.NORMAL, // 5 minutos
   });
 };
 
@@ -132,6 +136,7 @@ export const useCarpetas = () => {
     queryKey: ['carpetas'],
     queryFn: () => carpetasAPI.getAll(),
     select: (response) => response.data,
+    staleTime: STALE_TIMES.NORMAL, // 5 minutos
   });
 };
 
