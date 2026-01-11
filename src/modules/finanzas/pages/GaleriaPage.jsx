@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { albumesAPI, fotosAPI } from '../../../api';
+import React, { useState, useRef, useMemo } from 'react';
+import { useAlbumes, useFotos } from '../../../hooks/queries/finanzas';
+import { useCreateAlbum, useUploadFoto, useDeleteFoto, useDeleteAlbum } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
 import {
@@ -16,27 +17,96 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
+// Componente memoizado para tarjeta de álbum
+const AlbumCard = React.memo(({ album, onClick, onDelete, getMediaUrl }) => (
+  <div
+    className="group relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
+    onClick={onClick}
+  >
+    {/* Portada */}
+    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
+      {album.portada ? (
+        <img 
+          loading="lazy"
+          src={getMediaUrl(album.portada)} 
+          alt={album.nombre}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Folder className="w-16 h-16 text-gray-300" />
+        </div>
+      )}
+      
+      {/* Overlay con acciones */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(album.id);
+          }}
+          className="p-2 bg-white rounded-full hover:bg-red-50"
+        >
+          <Trash2 className="w-5 h-5 text-red-500" />
+        </button>
+      </div>
+    </div>
+
+    {/* Info */}
+    <div className="p-4">
+      <h3 className="font-semibold text-gray-900 truncate">{album.nombre}</h3>
+      <p className="text-sm text-gray-500">
+        {album.cantidad_fotos} foto{album.cantidad_fotos !== 1 && 's'}
+      </p>
+    </div>
+  </div>
+));
+
+AlbumCard.displayName = 'AlbumCard';
+
+// Componente memoizado para foto
+const FotoCard = React.memo(({ foto, onClick }) => (
+  <div
+    className="group relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
+    onClick={onClick}
+  >
+    <img 
+      loading="lazy"
+      src={foto.imagen} 
+      alt={foto.titulo || 'Foto'}
+      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+    />
+    
+    {/* Overlay con fecha */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        {foto.titulo && (
+          <p className="text-white text-sm font-medium truncate">{foto.titulo}</p>
+        )}
+        <p className="text-white/70 text-xs">
+          {new Date(foto.fecha_subida).toLocaleDateString('es-BO')}
+        </p>
+      </div>
+    </div>
+  </div>
+));
+
+FotoCard.displayName = 'FotoCard';
+
 const GaleriaPage = () => {
   // Helper para resolver URLs de imágenes
   const getMediaUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
     
-    // Obtener base URL de la API (ej: https://api.midominio.com/api)
     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    // Remover /api al final para obtener la raíz (ej: https://api.midominio.com)
     const rootUrl = apiBase.replace(/\/api\/?$/, '');
-    
-    // Asegurar que el path empiece con /
     const path = url.startsWith('/') ? url : `/${url}`;
     
     return `${rootUrl}${path}`;
   };
 
-  const [albumes, setAlbumes] = useState([]);
   const [albumActivo, setAlbumActivo] = useState(null);
-  const [fotos, setFotos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [modalAlbum, setModalAlbum] = useState(false);
   const [modalFoto, setModalFoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -45,36 +115,20 @@ const GaleriaPage = () => {
   
   const [nuevoAlbum, setNuevoAlbum] = useState({ nombre: '', descripcion: '' });
 
-  useEffect(() => {
-    cargarAlbumes();
-  }, []);
-
-  useEffect(() => {
-    if (albumActivo) {
-      cargarFotos();
-    }
-  }, [albumActivo]);
-
-  const cargarAlbumes = async () => {
-    try {
-      setLoading(true);
-      const response = await albumesAPI.getAll();
-      setAlbumes(extractApiData(response.data));
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarFotos = async () => {
-    try {
-      const response = await fotosAPI.getAll(albumActivo.id);
-      setFotos(extractApiData(response.data));
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+  // React Query hooks
+  const { data: albumesData = [], isLoading: loadingAlbumes } = useAlbumes();
+  const { data: fotosData = [], isLoading: loadingFotos } = useFotos(albumActivo?.id);
+  
+  // Mutations
+  const createAlbum = useCreateAlbum();
+  const uploadFoto = useUploadFoto();
+  const deleteFotoMutation = useDeleteFoto();
+  const deleteAlbumMutation = useDeleteAlbum();
+  
+  const albumes = useMemo(() => extractApiData(albumesData), [albumesData]);
+  const fotos = useMemo(() => extractApiData(fotosData), [fotosData]);
+  
+  const loading = loadingAlbumes;
 
   const showToast = (message, type) => {
     setToast({ message, type });
@@ -86,11 +140,10 @@ const GaleriaPage = () => {
     setSubmitting(true);
 
     try {
-      await albumesAPI.create(nuevoAlbum);
+      await createAlbum.mutateAsync(nuevoAlbum);
       showToast('Álbum creado', 'success');
       setModalAlbum(false);
       setNuevoAlbum({ nombre: '', descripcion: '' });
-      cargarAlbumes();
     } catch (error) {
       showToast('Error al crear álbum', 'error');
     } finally {
@@ -106,7 +159,7 @@ const GaleriaPage = () => {
     
     for (const file of files) {
       try {
-        await fotosAPI.upload(albumActivo.id, file);
+        await uploadFoto.mutateAsync({ albumId: albumActivo.id, imagen: file });
         subidas++;
       } catch (error) {
         console.error('Error subiendo foto:', error);
@@ -115,19 +168,15 @@ const GaleriaPage = () => {
     
     showToast(`${subidas} foto(s) subida(s)`, 'success');
     setSubmitting(false);
-    cargarFotos();
-    cargarAlbumes();
   };
 
   const handleDeleteFoto = async (id) => {
     if (!confirm('¿Eliminar esta foto?')) return;
     
     try {
-      await fotosAPI.delete(id);
+      await deleteFotoMutation.mutateAsync(id);
       showToast('Foto eliminada', 'success');
       setModalFoto(null);
-      cargarFotos();
-      cargarAlbumes();
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -137,10 +186,9 @@ const GaleriaPage = () => {
     if (!confirm('¿Eliminar este álbum y todas sus fotos?')) return;
     
     try {
-      await albumesAPI.delete(id);
+      await deleteAlbumMutation.mutateAsync(id);
       showToast('Álbum eliminado', 'success');
       if (albumActivo?.id === id) setAlbumActivo(null);
-      cargarAlbumes();
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -167,7 +215,6 @@ const GaleriaPage = () => {
         url: foto.imagen,
       });
     } catch (error) {
-      // Si cancela o falla, intentar WhatsApp
       if (error.name !== 'AbortError') {
         compartirWhatsApp(foto);
       }
@@ -186,7 +233,6 @@ const GaleriaPage = () => {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      // Fallback: abrir en nueva pestaña
       window.open(foto.imagen, '_blank');
     }
   };
@@ -209,47 +255,13 @@ const GaleriaPage = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {albumes.map((album) => (
-            <div
+            <AlbumCard
               key={album.id}
-              className="group relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
+              album={album}
               onClick={() => setAlbumActivo(album)}
-            >
-              {/* Portada */}
-              <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                {album.portada ? (
-                  <img 
-                    src={getMediaUrl(album.portada)} 
-                    alt={album.nombre}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Folder className="w-16 h-16 text-gray-300" />
-                  </div>
-                )}
-                
-                {/* Overlay con acciones */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteAlbum(album.id);
-                    }}
-                    className="p-2 bg-white rounded-full hover:bg-red-50"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 truncate">{album.nombre}</h3>
-                <p className="text-sm text-gray-500">
-                  {album.cantidad_fotos} foto{album.cantidad_fotos !== 1 && 's'}
-                </p>
-              </div>
-            </div>
+              onDelete={handleDeleteAlbum}
+              getMediaUrl={getMediaUrl}
+            />
           ))}
 
           {albumes.length === 0 && (
@@ -344,32 +356,14 @@ const GaleriaPage = () => {
       {/* Grid de fotos */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {fotos.map((foto) => (
-          <div
+          <FotoCard
             key={foto.id}
-            className="group relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
+            foto={foto}
             onClick={() => setModalFoto(foto)}
-          >
-            <img 
-              src={foto.imagen} 
-              alt={foto.titulo || 'Foto'}
-              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            />
-            
-            {/* Overlay con fecha */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                {foto.titulo && (
-                  <p className="text-white text-sm font-medium truncate">{foto.titulo}</p>
-                )}
-                <p className="text-white/70 text-xs">
-                  {new Date(foto.fecha_subida).toLocaleDateString('es-BO')}
-                </p>
-              </div>
-            </div>
-          </div>
+          />
         ))}
 
-        {fotos.length === 0 && (
+        {fotos.length === 0 && !loadingFotos && (
           <Card className="col-span-full text-center py-12">
             <Camera className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 mb-4">Este álbum está vacío</p>

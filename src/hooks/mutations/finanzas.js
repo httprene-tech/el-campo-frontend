@@ -185,6 +185,18 @@ export const useDeleteFoto = () => {
     mutationFn: (id) => fotosAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fotos'] });
+      queryClient.invalidateQueries({ queryKey: ['albumes'] });
+    },
+  });
+};
+
+export const useDeleteAlbum = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => albumesAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['albumes'] });
+      queryClient.invalidateQueries({ queryKey: ['fotos'] });
     },
   });
 };
@@ -196,6 +208,17 @@ export const useCreateCarpeta = () => {
     mutationFn: (data) => carpetasAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carpetas'] });
+    },
+  });
+};
+
+export const useDeleteCarpeta = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => carpetasAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carpetas'] });
+      queryClient.invalidateQueries({ queryKey: ['documentos'] });
     },
   });
 };

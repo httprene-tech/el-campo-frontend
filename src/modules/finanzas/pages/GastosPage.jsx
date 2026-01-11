@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
-import { gastosAPI, categoriasAPI, proveedoresAPI } from '../../../api';
+import { useGastos, useCategorias, useProveedores } from '../../../hooks/queries/finanzas';
+import { useCreateGasto, useDeleteGasto } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
 import {
@@ -19,10 +20,31 @@ import {
 const GastosPage = () => {
   const { proyectoActivo, actualizarProyecto } = useProyecto();
   const { canRegister } = useAuth();
-  const [gastos, setGastos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [proveedores, setProveedores] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // React Query hooks - reemplazan useEffect + fetch
+  const { data: gastosData, isLoading: isLoadingGastos } = useGastos(
+    proyectoActivo ? { proyecto: proyectoActivo.id } : {}
+  );
+  const { data: categoriasData = [], isLoading: isLoadingCategorias } = useCategorias();
+  const { data: proveedoresData = [], isLoading: isLoadingProveedores } = useProveedores();
+  
+  // Mutations
+  const createGasto = useCreateGasto();
+  const deleteGasto = useDeleteGasto();
+  
+  // Extraer datos de las respuestas
+  const gastos = useMemo(() => {
+    if (!gastosData) return [];
+    // useGastos usa useInfiniteQuery, aplanar páginas
+    if (gastosData.pages) {
+      return gastosData.pages.flat();
+    }
+    return extractApiData(gastosData);
+  }, [gastosData]);
+  
+  const categorias = useMemo(() => extractApiData(categoriasData), [categoriasData]);
+  const proveedores = useMemo(() => extractApiData(proveedoresData), [proveedoresData]);
+  
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
@@ -47,31 +69,7 @@ const GastosPage = () => {
     imagen_comprobante: null,
   });
 
-  useEffect(() => {
-    cargarDatos();
-  }, [proyectoActivo]);
-
-  const cargarDatos = async () => {
-    if (!proyectoActivo) return;
-    
-    try {
-      setLoading(true);
-      const [gastosRes, categoriasRes, proveedoresRes] = await Promise.all([
-        gastosAPI.getAll({ proyecto: proyectoActivo.id }),
-        categoriasAPI.getAll(),
-        proveedoresAPI.getAll(),
-      ]);
-      
-      setGastos(extractApiData(gastosRes.data));
-      setCategorias(extractApiData(categoriasRes.data));
-      setProveedores(extractApiData(proveedoresRes.data));
-    } catch (error) {
-      console.error('Error:', error);
-      showToast('Error al cargar datos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = isLoadingGastos || isLoadingCategorias || isLoadingProveedores;
 
   const showToast = (message, type) => {
     setToast({ message, type });
@@ -100,7 +98,7 @@ const GastosPage = () => {
     setSubmitting(true);
 
     try {
-      await gastosAPI.create({
+      await createGasto.mutateAsync({
         ...formData,
         proyecto: proyectoActivo.id,
         proveedor_rel: formData.proveedor_rel || null,
@@ -109,7 +107,6 @@ const GastosPage = () => {
       showToast('Gasto registrado correctamente', 'success');
       setModalOpen(false);
       resetForm();
-      cargarDatos();
       actualizarProyecto();
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Error al registrar el gasto';
@@ -123,9 +120,8 @@ const GastosPage = () => {
     if (!confirm('¿Está seguro de eliminar este gasto?')) return;
     
     try {
-      await gastosAPI.delete(id);
+      await deleteGasto.mutateAsync(id);
       showToast('Gasto eliminado', 'success');
-      cargarDatos();
       actualizarProyecto();
     } catch (error) {
       showToast('Error al eliminar', 'error');

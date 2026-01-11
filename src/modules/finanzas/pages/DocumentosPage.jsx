@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { carpetasAPI, documentosAPI } from '../../../api';
+import React, { useState, useRef, useMemo } from 'react';
+import { useCarpetas, useDocumentos } from '../../../hooks/queries/finanzas';
+import { useCreateCarpeta, useDeleteCarpeta, useUploadDocumento, useDeleteDocumento } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
 import {
@@ -15,11 +16,77 @@ import {
   Calendar,
 } from 'lucide-react';
 
+// Componente memoizado para tarjeta de carpeta
+const CarpetaCard = React.memo(({ carpeta, onClick, onDelete }) => (
+  <div
+    className="group relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:border-emerald-200 transition-all"
+    onClick={onClick}
+  >
+    {/* Delete button */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete(carpeta.id);
+      }}
+      className="absolute top-3 right-3 p-1.5 bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all"
+    >
+      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
+    </button>
+
+    <div className="mb-4">
+      <div className="w-14 h-14 bg-amber-50 rounded-xl flex items-center justify-center">
+        <Folder className="w-8 h-8 text-amber-500" />
+      </div>
+    </div>
+
+    <h3 className="font-semibold text-gray-900 truncate">{carpeta.nombre}</h3>
+    <p className="text-sm text-gray-500 mt-1">
+      {carpeta.cantidad_documentos} documento{carpeta.cantidad_documentos !== 1 && 's'}
+    </p>
+  </div>
+));
+
+CarpetaCard.displayName = 'CarpetaCard';
+
+// Componente memoizado para fila de documento
+const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete }) => (
+  <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
+      {getFileIcon(doc.tipo)}
+    </div>
+    <div className="flex-1 min-w-0">
+      <h3 className="font-medium text-gray-900 truncate">{doc.nombre}</h3>
+      <div className="flex items-center gap-3 text-sm text-gray-500">
+        <span>{doc.tipo_display}</span>
+        <span className="flex items-center gap-1">
+          <Calendar className="w-3 h-3" />
+          {new Date(doc.fecha_documento).toLocaleDateString('es-BO')}
+        </span>
+      </div>
+    </div>
+    <div className="flex items-center gap-2">
+      <a
+        href={doc.archivo}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 hover:bg-emerald-50 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
+      >
+        <Download className="w-5 h-5" />
+      </a>
+      <button
+        onClick={() => onDelete(doc.id)}
+        className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+      >
+        <Trash2 className="w-5 h-5" />
+      </button>
+    </div>
+  </div>
+));
+
+DocumentoRow.displayName = 'DocumentoRow';
+
 const DocumentosPage = () => {
-  const [carpetas, setCarpetas] = useState([]);
   const [carpetaActiva, setCarpetaActiva] = useState(null);
-  const [documentos, setDocumentos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [modalCarpeta, setModalCarpeta] = useState(false);
   const [modalDocumento, setModalDocumento] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -45,36 +112,28 @@ const DocumentosPage = () => {
     { value: 'OTRO', label: 'Otro' },
   ];
 
-  useEffect(() => {
-    cargarCarpetas();
-  }, []);
-
-  useEffect(() => {
-    if (carpetaActiva) {
-      cargarDocumentos();
+  // React Query hooks
+  const { data: carpetasData = [], isLoading: loadingCarpetas } = useCarpetas();
+  const { data: documentosData, isLoading: loadingDocumentos } = useDocumentos(
+    carpetaActiva ? { carpeta: carpetaActiva.id } : {}
+  );
+  
+  // Mutations
+  const createCarpeta = useCreateCarpeta();
+  const deleteCarpetaMutation = useDeleteCarpeta();
+  const uploadDocumento = useUploadDocumento();
+  const deleteDocumentoMutation = useDeleteDocumento();
+  
+  const carpetas = useMemo(() => extractApiData(carpetasData), [carpetasData]);
+  const documentos = useMemo(() => {
+    if (!documentosData) return [];
+    if (documentosData.pages) {
+      return documentosData.pages.flat();
     }
-  }, [carpetaActiva]);
+    return extractApiData(documentosData);
+  }, [documentosData]);
 
-  const cargarCarpetas = async () => {
-    try {
-      setLoading(true);
-      const response = await carpetasAPI.getAll();
-      setCarpetas(extractApiData(response.data));
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarDocumentos = async () => {
-    try {
-      const response = await documentosAPI.getAll({ carpeta: carpetaActiva.id });
-      setDocumentos(extractApiData(response.data));
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+  const loading = loadingCarpetas;
 
   const showToast = (message, type) => {
     setToast({ message, type });
@@ -86,11 +145,10 @@ const DocumentosPage = () => {
     setSubmitting(true);
 
     try {
-      await carpetasAPI.create(nuevaCarpeta);
+      await createCarpeta.mutateAsync(nuevaCarpeta);
       showToast('Carpeta creada', 'success');
       setModalCarpeta(false);
       setNuevaCarpeta({ nombre: '', descripcion: '' });
-      cargarCarpetas();
     } catch (error) {
       showToast('Error al crear carpeta', 'error');
     } finally {
@@ -108,7 +166,7 @@ const DocumentosPage = () => {
     setSubmitting(true);
 
     try {
-      await documentosAPI.upload({
+      await uploadDocumento.mutateAsync({
         ...nuevoDocumento,
         carpeta: carpetaActiva.id,
       });
@@ -121,8 +179,6 @@ const DocumentosPage = () => {
         fecha_documento: new Date().toISOString().split('T')[0],
         archivo: null,
       });
-      cargarDocumentos();
-      cargarCarpetas();
     } catch (error) {
       showToast('Error al subir documento', 'error');
     } finally {
@@ -134,10 +190,8 @@ const DocumentosPage = () => {
     if (!confirm('¿Eliminar este documento?')) return;
     
     try {
-      await documentosAPI.delete(id);
+      await deleteDocumentoMutation.mutateAsync(id);
       showToast('Documento eliminado', 'success');
-      cargarDocumentos();
-      cargarCarpetas();
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -147,10 +201,9 @@ const DocumentosPage = () => {
     if (!confirm('¿Eliminar esta carpeta y todos sus documentos?')) return;
     
     try {
-      await carpetasAPI.delete(id);
+      await deleteCarpetaMutation.mutateAsync(id);
       showToast('Carpeta eliminada', 'success');
       if (carpetaActiva?.id === id) setCarpetaActiva(null);
-      cargarCarpetas();
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -187,33 +240,12 @@ const DocumentosPage = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {carpetas.map((carpeta) => (
-            <div
+            <CarpetaCard
               key={carpeta.id}
-              className="group relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:border-emerald-200 transition-all"
+              carpeta={carpeta}
               onClick={() => setCarpetaActiva(carpeta)}
-            >
-              {/* Delete button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteCarpeta(carpeta.id);
-                }}
-                className="absolute top-3 right-3 p-1.5 bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all"
-              >
-                <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
-              </button>
-
-              <div className="mb-4">
-                <div className="w-14 h-14 bg-amber-50 rounded-xl flex items-center justify-center">
-                  <Folder className="w-8 h-8 text-amber-500" />
-                </div>
-              </div>
-
-              <h3 className="font-semibold text-gray-900 truncate">{carpeta.nombre}</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {carpeta.cantidad_documentos} documento{carpeta.cantidad_documentos !== 1 && 's'}
-              </p>
-            </div>
+              onDelete={handleDeleteCarpeta}
+            />
           ))}
 
           {carpetas.length === 0 && (
@@ -296,40 +328,12 @@ const DocumentosPage = () => {
         <div className="divide-y divide-gray-50">
           {documentos.length > 0 ? (
             documentos.map((doc) => (
-              <div 
-                key={doc.id} 
-                className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
-                  {getFileIcon(doc.tipo)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">{doc.nombre}</h3>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span>{doc.tipo_display}</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(doc.fecha_documento).toLocaleDateString('es-BO')}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={doc.archivo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-emerald-50 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
-                  >
-                    <Download className="w-5 h-5" />
-                  </a>
-                  <button
-                    onClick={() => handleDeleteDocumento(doc.id)}
-                    className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+              <DocumentoRow
+                key={doc.id}
+                doc={doc}
+                getFileIcon={getFileIcon}
+                onDelete={handleDeleteDocumento}
+              />
             ))
           ) : (
             <div className="p-12 text-center">

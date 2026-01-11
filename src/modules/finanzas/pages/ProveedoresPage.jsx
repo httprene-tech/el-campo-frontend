@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { proveedoresAPI } from '../../../api';
+import React, { useState } from 'react';
+import { useProveedores } from '../../../hooks/queries/finanzas';
+import { useCreateProveedor, useUpdateProveedor, useDeleteProveedor } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
 import {
@@ -13,9 +14,77 @@ import {
   Wallet,
 } from 'lucide-react';
 
+// Componente memoizado para evitar re-renders innecesarios
+const ProveedorCard = React.memo(({ proveedor, onEdit, onDelete }) => (
+  <Card className="relative group">
+    {/* Acciones */}
+    <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <button
+        onClick={() => onEdit(proveedor)}
+        className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50"
+      >
+        <Edit2 className="w-4 h-4 text-gray-500" />
+      </button>
+      <button
+        onClick={() => onDelete(proveedor.id)}
+        className="p-2 bg-white rounded-lg shadow-sm hover:bg-red-50"
+      >
+        <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
+      </button>
+    </div>
+
+    <div className="flex items-start gap-3 mb-4">
+      <div className="p-3 bg-blue-50 rounded-xl">
+        <Users className="w-6 h-6 text-blue-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-gray-900">{proveedor.nombre}</h3>
+        <p className="text-sm text-gray-500 flex items-center gap-1">
+          <Briefcase className="w-3 h-3" />
+          {proveedor.especialidad || 'Sin especialidad'}
+        </p>
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      {proveedor.telefono && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Phone className="w-4 h-4 text-gray-400" />
+          <span>{proveedor.telefono}</span>
+        </div>
+      )}
+      {proveedor.direccion && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <MapPin className="w-4 h-4 text-gray-400" />
+          <span className="truncate">{proveedor.direccion}</span>
+        </div>
+      )}
+    </div>
+
+    {/* Total pagado */}
+    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+      <span className="text-sm text-gray-500">Total Pagado</span>
+      <div className="flex items-center gap-1">
+        <Wallet className="w-4 h-4 text-emerald-500" />
+        <span className="font-semibold text-emerald-600">
+          {Number(proveedor.total_pagado || 0).toLocaleString('es-BO')} Bs
+        </span>
+      </div>
+    </div>
+  </Card>
+));
+
+ProveedorCard.displayName = 'ProveedorCard';
+
 const ProveedoresPage = () => {
-  const [proveedores, setProveedores] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // React Query hooks
+  const { data: proveedoresData = [], isLoading: loading } = useProveedores();
+  const createProveedor = useCreateProveedor();
+  const updateProveedor = useUpdateProveedor();
+  const deleteProveedor = useDeleteProveedor();
+  
+  const proveedores = React.useMemo(() => extractApiData(proveedoresData), [proveedoresData]);
+  
   const [modalOpen, setModalOpen] = useState(false);
   const [editando, setEditando] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,22 +97,6 @@ const ProveedoresPage = () => {
     especialidad: '',
   });
 
-  useEffect(() => {
-    cargarProveedores();
-  }, []);
-
-  const cargarProveedores = async () => {
-    try {
-      setLoading(true);
-      const response = await proveedoresAPI.getAll();
-      setProveedores(extractApiData(response.data));
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const showToast = (message, type) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -55,14 +108,13 @@ const ProveedoresPage = () => {
 
     try {
       if (editando) {
-        await proveedoresAPI.update(editando.id, formData);
+        await updateProveedor.mutateAsync({ id: editando.id, data: formData });
         showToast('Proveedor actualizado', 'success');
       } else {
-        await proveedoresAPI.create(formData);
+        await createProveedor.mutateAsync(formData);
         showToast('Proveedor creado', 'success');
       }
       cerrarModal();
-      cargarProveedores();
     } catch (error) {
       showToast('Error al guardar', 'error');
     } finally {
@@ -85,9 +137,8 @@ const ProveedoresPage = () => {
     if (!confirm('¿Está seguro de eliminar este proveedor?')) return;
     
     try {
-      await proveedoresAPI.delete(id);
+      await deleteProveedor.mutateAsync(id);
       showToast('Proveedor eliminado', 'success');
-      cargarProveedores();
     } catch (error) {
       showToast('Error al eliminar', 'error');
     }
@@ -122,62 +173,12 @@ const ProveedoresPage = () => {
       {/* Grid de proveedores */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {proveedores.map((proveedor) => (
-          <Card key={proveedor.id} className="relative group">
-            {/* Acciones */}
-            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => handleEdit(proveedor)}
-                className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50"
-              >
-                <Edit2 className="w-4 h-4 text-gray-500" />
-              </button>
-              <button
-                onClick={() => handleDelete(proveedor.id)}
-                className="p-2 bg-white rounded-lg shadow-sm hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
-              </button>
-            </div>
-
-            <div className="flex items-start gap-3 mb-4">
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <Users className="w-6 h-6 text-blue-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900">{proveedor.nombre}</h3>
-                <p className="text-sm text-gray-500 flex items-center gap-1">
-                  <Briefcase className="w-3 h-3" />
-                  {proveedor.especialidad || 'Sin especialidad'}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {proveedor.telefono && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <span>{proveedor.telefono}</span>
-                </div>
-              )}
-              {proveedor.direccion && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{proveedor.direccion}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Total pagado */}
-            <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-sm text-gray-500">Total Pagado</span>
-              <div className="flex items-center gap-1">
-                <Wallet className="w-4 h-4 text-emerald-500" />
-                <span className="font-semibold text-emerald-600">
-                  {Number(proveedor.total_pagado || 0).toLocaleString('es-BO')} Bs
-                </span>
-              </div>
-            </div>
-          </Card>
+          <ProveedorCard
+            key={proveedor.id}
+            proveedor={proveedor}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ))}
 
         {proveedores.length === 0 && (
