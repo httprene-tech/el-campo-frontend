@@ -41,9 +41,9 @@ export const gastosAPI = {
         formData.append(key, data[key]);
       }
     });
-    return apiClient.post('/finanzas/gastos/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    // No especificar Content-Type manualmente - axios lo configura automáticamente
+    // con el boundary correcto cuando se usa FormData
+    return apiClient.post('/finanzas/gastos/', formData);
   },
   update: (id, data) => apiClient.put(`/finanzas/gastos/${id}/`, data),
   delete: (id) => apiClient.delete(`/finanzas/gastos/${id}/`),
@@ -97,9 +97,7 @@ export const fotosAPI = {
     formData.append('imagen', imagen);
     if (titulo) formData.append('titulo', titulo);
     if (descripcion) formData.append('descripcion', descripcion);
-    return apiClient.post('/finanzas/fotos/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return apiClient.post('/finanzas/fotos/', formData);
   },
   delete: (id) => apiClient.delete(`/finanzas/fotos/${id}/`),
 };
@@ -123,9 +121,7 @@ export const documentosAPI = {
         formData.append(key, data[key]);
       }
     });
-    return apiClient.post('/finanzas/documentos/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return apiClient.post('/finanzas/documentos/', formData);
   },
   update: (id, data) => {
     const formData = new FormData();
@@ -134,9 +130,7 @@ export const documentosAPI = {
         formData.append(key, data[key]);
       }
     });
-    return apiClient.put(`/finanzas/documentos/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return apiClient.put(`/finanzas/documentos/${id}/`, formData);
   },
   delete: (id) => apiClient.delete(`/finanzas/documentos/${id}/`),
 };

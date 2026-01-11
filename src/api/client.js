@@ -18,6 +18,11 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Token ${token}`;
     }
+    // Si el data es FormData, eliminar Content-Type para que axios lo configure
+    // automáticamente con el boundary correcto para multipart/form-data
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)
