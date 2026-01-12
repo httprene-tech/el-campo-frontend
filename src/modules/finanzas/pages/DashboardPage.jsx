@@ -316,7 +316,7 @@ const DashboardPage = () => {
           <div className="px-6 py-4 border-b border-gray-50">
             <h3 className="font-bold text-gray-900">Distribución por Categoría</h3>
           </div>
-          <div className="relative w-full" style={{ height: 260 }}>
+          <div className="relative w-full flex-1" style={{ minHeight: 300, minWidth: 0 }}>
             {(gastosLoading || categoriasLoading) ? (
                <div className="h-full w-full flex items-center justify-center">
                  <div className="w-32 h-32 bg-gray-50 animate-pulse rounded-full" />
@@ -328,8 +328,8 @@ const DashboardPage = () => {
                     data={datosCategorias}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={70}
+                    outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
                     animationBegin={200}
