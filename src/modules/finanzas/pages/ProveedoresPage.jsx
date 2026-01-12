@@ -1,80 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useProveedores } from '../../../hooks/queries/finanzas';
 import { useCreateProveedor, useUpdateProveedor, useDeleteProveedor } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
-import {
-  Plus,
-  Users,
-  Phone,
-  MapPin,
-  Briefcase,
-  Trash2,
-  Edit2,
-  Wallet,
-} from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 
-// Componente memoizado para evitar re-renders innecesarios
-const ProveedorCard = React.memo(({ proveedor, onEdit, onDelete }) => (
-  <Card className="relative group">
-    {/* Acciones */}
-    <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button
-        onClick={() => onEdit(proveedor)}
-        className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50"
-      >
-        <Edit2 className="w-4 h-4 text-gray-500" />
-      </button>
-      <button
-        onClick={() => onDelete(proveedor.id)}
-        className="p-2 bg-white rounded-lg shadow-sm hover:bg-red-50"
-      >
-        <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
-      </button>
-    </div>
-
-    <div className="flex items-start gap-3 mb-4">
-      <div className="p-3 bg-blue-50 rounded-xl">
-        <Users className="w-6 h-6 text-blue-500" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-gray-900">{proveedor.nombre}</h3>
-        <p className="text-sm text-gray-500 flex items-center gap-1">
-          <Briefcase className="w-3 h-3" />
-          {proveedor.especialidad || 'Sin especialidad'}
-        </p>
-      </div>
-    </div>
-
-    <div className="space-y-2">
-      {proveedor.telefono && (
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Phone className="w-4 h-4 text-gray-400" />
-          <span>{proveedor.telefono}</span>
-        </div>
-      )}
-      {proveedor.direccion && (
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="w-4 h-4 text-gray-400" />
-          <span className="truncate">{proveedor.direccion}</span>
-        </div>
-      )}
-    </div>
-
-    {/* Total pagado */}
-    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-      <span className="text-sm text-gray-500">Total Pagado</span>
-      <div className="flex items-center gap-1">
-        <Wallet className="w-4 h-4 text-emerald-500" />
-        <span className="font-semibold text-emerald-600">
-          {Number(proveedor.total_pagado || 0).toLocaleString('es-BO')} Bs
-        </span>
-      </div>
-    </div>
-  </Card>
-));
-
-ProveedorCard.displayName = 'ProveedorCard';
+// Componente extraído
+import { ProveedorCard } from '../components';
 
 const ProveedoresPage = () => {
   // React Query hooks
@@ -82,14 +14,14 @@ const ProveedoresPage = () => {
   const createProveedor = useCreateProveedor();
   const updateProveedor = useUpdateProveedor();
   const deleteProveedor = useDeleteProveedor();
-  
-  const proveedores = React.useMemo(() => extractApiData(proveedoresData), [proveedoresData]);
-  
+
+  const proveedores = useMemo(() => extractApiData(proveedoresData), [proveedoresData]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editando, setEditando] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     nombre: '',
     telefono: '',
@@ -135,7 +67,7 @@ const ProveedoresPage = () => {
 
   const handleDelete = async (id) => {
     if (!confirm('¿Está seguro de eliminar este proveedor?')) return;
-    
+
     try {
       await deleteProveedor.mutateAsync(id);
       showToast('Proveedor eliminado', 'success');
@@ -200,30 +132,30 @@ const ProveedoresPage = () => {
           <Input
             label="Nombre"
             value={formData.nombre}
-            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
             placeholder="Nombre del proveedor"
             required
           />
-          
+
           <Input
             label="Especialidad"
             value={formData.especialidad}
-            onChange={(e) => setFormData({...formData, especialidad: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, especialidad: e.target.value })}
             placeholder="Ej: Materiales de construcción, Soldadura"
           />
-          
+
           <Input
             label="Teléfono"
             value={formData.telefono}
-            onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
             placeholder="Ej: 70012345"
           />
-          
+
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Dirección</label>
             <textarea
               value={formData.direccion}
-              onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
               placeholder="Dirección del proveedor"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               rows={2}

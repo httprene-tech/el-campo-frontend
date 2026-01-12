@@ -4,89 +4,10 @@ import { useCarpetas, useDocumentos } from '../../../hooks/queries/finanzas';
 import { useCreateCarpeta, useDeleteCarpeta, useUploadDocumento, useDeleteDocumento } from '../../../hooks/mutations/finanzas';
 import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
-import {
-  Plus,
-  FileText,
-  Folder,
-  FolderPlus,
-  Upload,
-  Trash2,
-  Download,
-  ChevronLeft,
-  File,
-  Calendar,
-} from 'lucide-react';
+import { Plus, FileText, Folder, FolderPlus, Upload, ChevronLeft, File } from 'lucide-react';
 
-// Componente memoizado para tarjeta de carpeta
-const CarpetaCard = React.memo(({ carpeta, onClick, onDelete }) => (
-  <div
-    className="group relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:border-emerald-200 transition-all"
-    onClick={onClick}
-  >
-    {/* Delete button */}
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onDelete(carpeta.id);
-      }}
-      className="absolute top-3 right-3 p-1.5 bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all"
-    >
-      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
-    </button>
-
-    <div className="mb-4">
-      <div className="w-14 h-14 bg-amber-50 rounded-xl flex items-center justify-center">
-        <Folder className="w-8 h-8 text-amber-500" />
-      </div>
-    </div>
-
-    <h3 className="font-semibold text-gray-900 truncate">{carpeta.nombre}</h3>
-    <p className="text-sm text-gray-500 mt-1">
-      {carpeta.cantidad_documentos} documento{carpeta.cantidad_documentos !== 1 && 's'}
-    </p>
-  </div>
-));
-
-CarpetaCard.displayName = 'CarpetaCard';
-
-// Componente memoizado para fila de documento
-const DocumentoRow = React.memo(({ doc, getFileIcon, onDelete, userId }) => (
-  <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
-    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
-      {getFileIcon(doc.tipo)}
-    </div>
-    <div className="flex-1 min-w-0">
-      <h3 className="font-medium text-gray-900 truncate">{doc.nombre}</h3>
-      <div className="flex items-center gap-3 text-sm text-gray-500">
-        <span>{doc.tipo_display}</span>
-        <span className="flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
-          {new Date(doc.fecha_documento).toLocaleDateString('es-BO')}
-        </span>
-      </div>
-    </div>
-    <div className="flex items-center gap-2">
-      <a
-        href={doc.archivo}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2 hover:bg-emerald-50 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
-      >
-        <Download className="w-5 h-5" />
-      </a>
-      {doc.subido_por === userId && (
-        <button
-          onClick={() => onDelete(doc.id)}
-          className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  </div>
-));
-
-DocumentoRow.displayName = 'DocumentoRow';
+// Componentes extraídos
+import { CarpetaCard, DocumentoRow } from '../components';
 
 const DocumentosPage = () => {
   const { user } = useAuth();
@@ -96,7 +17,7 @@ const DocumentosPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const fileInputRef = useRef(null);
-  
+
   const [nuevaCarpeta, setNuevaCarpeta] = useState({ nombre: '', descripcion: '' });
   const [nuevoDocumento, setNuevoDocumento] = useState({
     nombre: '',
@@ -121,13 +42,13 @@ const DocumentosPage = () => {
   const { data: documentosData, isLoading: loadingDocumentos } = useDocumentos(
     carpetaActiva ? { carpeta: carpetaActiva.id } : {}
   );
-  
+
   // Mutations
   const createCarpeta = useCreateCarpeta();
   const deleteCarpetaMutation = useDeleteCarpeta();
   const uploadDocumento = useUploadDocumento();
   const deleteDocumentoMutation = useDeleteDocumento();
-  
+
   const carpetas = useMemo(() => extractApiData(carpetasData), [carpetasData]);
   const documentos = useMemo(() => {
     if (!documentosData) return [];
@@ -166,7 +87,7 @@ const DocumentosPage = () => {
       showToast('Seleccione un archivo', 'warning');
       return;
     }
-    
+
     setSubmitting(true);
 
     try {
@@ -192,7 +113,7 @@ const DocumentosPage = () => {
 
   const handleDeleteDocumento = async (id) => {
     if (!confirm('¿Eliminar este documento?')) return;
-    
+
     try {
       await deleteDocumentoMutation.mutateAsync(id);
       showToast('Documento eliminado', 'success');
@@ -203,7 +124,7 @@ const DocumentosPage = () => {
 
   const handleDeleteCarpeta = async (id) => {
     if (!confirm('¿Eliminar esta carpeta y todos sus documentos?')) return;
-    
+
     try {
       await deleteCarpetaMutation.mutateAsync(id);
       showToast('Carpeta eliminada', 'success');
@@ -215,13 +136,13 @@ const DocumentosPage = () => {
 
   const getFileIcon = (tipo) => {
     const icons = {
-      'PLAN_PAGO': '📋',
-      'CONTRATO': '📝',
-      'COMPROBANTE_BANCO': '🏦',
-      'FACTURA': '🧾',
-      'PERMISO': '📄',
-      'PLANO': '📐',
-      'OTRO': '📎',
+      PLAN_PAGO: '📋',
+      CONTRATO: '📝',
+      COMPROBANTE_BANCO: '🏦',
+      FACTURA: '🧾',
+      PERMISO: '📄',
+      PLANO: '📐',
+      OTRO: '📎',
     };
     return icons[tipo] || '📄';
   };
@@ -264,26 +185,21 @@ const DocumentosPage = () => {
         </div>
 
         {/* Modal Nueva Carpeta */}
-        <Modal
-          isOpen={modalCarpeta}
-          onClose={() => setModalCarpeta(false)}
-          title="Nueva Carpeta"
-          size="sm"
-        >
+        <Modal isOpen={modalCarpeta} onClose={() => setModalCarpeta(false)} title="Nueva Carpeta" size="sm">
           <form onSubmit={handleCrearCarpeta} className="space-y-5">
             <Input
               label="Nombre de la Carpeta"
               value={nuevaCarpeta.nombre}
-              onChange={(e) => setNuevaCarpeta({...nuevaCarpeta, nombre: e.target.value})}
+              onChange={(e) => setNuevaCarpeta({ ...nuevaCarpeta, nombre: e.target.value })}
               placeholder="Ej: Plan de Pago Banco, Contratos"
               required
             />
-            
+
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">Descripción</label>
               <textarea
                 value={nuevaCarpeta.descripcion}
-                onChange={(e) => setNuevaCarpeta({...nuevaCarpeta, descripcion: e.target.value})}
+                onChange={(e) => setNuevaCarpeta({ ...nuevaCarpeta, descripcion: e.target.value })}
                 placeholder="Descripción de la carpeta..."
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 rows={3}
@@ -313,13 +229,15 @@ const DocumentosPage = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setCarpetaActiva(null)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{carpetaActiva.nombre}</h1>
-            <p className="text-gray-500">{documentos.length} documento{documentos.length !== 1 && 's'}</p>
+            <p className="text-gray-500">
+              {documentos.length} documento{documentos.length !== 1 && 's'}
+            </p>
           </div>
         </div>
         <Button icon={Upload} onClick={() => setModalDocumento(true)}>
@@ -344,35 +262,28 @@ const DocumentosPage = () => {
             <div className="p-12 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 mb-4">Esta carpeta está vacía</p>
-              <Button onClick={() => setModalDocumento(true)}>
-                Subir primer documento
-              </Button>
+              <Button onClick={() => setModalDocumento(true)}>Subir primer documento</Button>
             </div>
           )}
         </div>
       </Card>
 
       {/* Modal Subir Documento */}
-      <Modal
-        isOpen={modalDocumento}
-        onClose={() => setModalDocumento(false)}
-        title="Subir Documento"
-        size="md"
-      >
+      <Modal isOpen={modalDocumento} onClose={() => setModalDocumento(false)} title="Subir Documento" size="md">
         <form onSubmit={handleSubirDocumento} className="space-y-5">
           <Input
             label="Nombre del Documento"
             value={nuevoDocumento.nombre}
-            onChange={(e) => setNuevoDocumento({...nuevoDocumento, nombre: e.target.value})}
+            onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, nombre: e.target.value })}
             placeholder="Ej: Cronograma de pagos enero 2024"
             required
           />
-          
+
           <div className="grid grid-cols-2 gap-4">
             <Select
               label="Tipo de Documento"
               value={nuevoDocumento.tipo}
-              onChange={(e) => setNuevoDocumento({...nuevoDocumento, tipo: e.target.value})}
+              onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, tipo: e.target.value })}
               options={tiposDocumento}
               required
             />
@@ -380,14 +291,14 @@ const DocumentosPage = () => {
               label="Fecha del Documento"
               type="date"
               value={nuevoDocumento.fecha_documento}
-              onChange={(e) => setNuevoDocumento({...nuevoDocumento, fecha_documento: e.target.value})}
+              onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, fecha_documento: e.target.value })}
               required
             />
           </div>
-          
+
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Archivo</label>
-            <div 
+            <div
               className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
@@ -409,7 +320,7 @@ const DocumentosPage = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                onChange={(e) => setNuevoDocumento({...nuevoDocumento, archivo: e.target.files[0]})}
+                onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, archivo: e.target.files[0] })}
                 className="hidden"
               />
             </div>
@@ -419,7 +330,7 @@ const DocumentosPage = () => {
             <label className="block text-sm font-medium text-gray-700">Descripción (opcional)</label>
             <textarea
               value={nuevoDocumento.descripcion}
-              onChange={(e) => setNuevoDocumento({...nuevoDocumento, descripcion: e.target.value})}
+              onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, descripcion: e.target.value })}
               placeholder="Notas sobre este documento..."
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               rows={2}
