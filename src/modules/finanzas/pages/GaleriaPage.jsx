@@ -10,16 +10,12 @@ import {
   Folder,
   Upload,
   Trash2,
-  X,
   ChevronLeft,
   ChevronRight,
   Camera,
   Share2,
   Download,
   MessageCircle,
-  ZoomIn,
-  ZoomOut,
-  Heart,
   Info,
   Grid,
   LayoutGrid,
@@ -134,7 +130,7 @@ const FotoCard = React.memo(({ foto, onClick, index }) => {
 
 FotoCard.displayName = 'FotoCard';
 
-// Componente de visor de fotos a pantalla completa mejorado
+// Componente de visor de fotos a pantalla completa - Optimizado para PWA móvil
 const PhotoViewer = ({ 
   foto, 
   fotos, 
@@ -183,19 +179,38 @@ const PhotoViewer = ({
     }
   };
 
+  // Soporte para botón de atrás del navegador/PWA
+  useEffect(() => {
+    // Añadir entrada al historial cuando se abre el visor
+    window.history.pushState({ photoViewer: true }, '');
+    
+    const handlePopState = (e) => {
+      // Cuando el usuario presiona atrás, cerrar el visor
+      onClose();
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [onClose]);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight' && hasNext) onNext();
       if (e.key === 'ArrowLeft' && hasPrev) onPrev();
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        window.history.back(); // Usar history.back para mantener consistencia
+      }
       if (e.key === '+' || e.key === '=') setZoom(z => Math.min(z + 0.5, 3));
       if (e.key === '-') setZoom(z => Math.max(z - 0.5, 1));
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasNext, hasPrev, onNext, onPrev, onClose]);
+  }, [hasNext, hasPrev, onNext, onPrev]);
 
   // Reset zoom on photo change
   useEffect(() => {
@@ -213,9 +228,14 @@ const PhotoViewer = ({
     });
   };
 
+  // Función para cerrar usando history.back para consistencia
+  const handleClose = () => {
+    window.history.back();
+  };
+
   return (
     <div 
-      className="fixed inset-0 bg-black z-[9999] flex flex-col"
+      className="fixed inset-0 bg-black flex flex-col"
       style={{
         position: 'fixed',
         top: 0,
@@ -223,61 +243,66 @@ const PhotoViewer = ({
         right: 0,
         bottom: 0,
         width: '100vw',
-        height: '100vh',
+        height: '100dvh', // Uses dynamic viewport height, falls back to 100vh in older browsers via inset-0
+        zIndex: 99999,
         animation: 'photoViewerFadeIn 0.3s ease-out forwards',
       }}
     >
-      {/* Header con botón de regresar prominente */}
+      {/* Header fijo con botón de regresar MUY PROMINENTE */}
       <div 
-        className="flex items-center justify-between px-3 py-2 bg-black/60 backdrop-blur-md"
-        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
+        className="flex-shrink-0 flex items-center justify-between px-2 sm:px-4 bg-black/80 backdrop-blur-md"
+        style={{ 
+          paddingTop: 'max(8px, env(safe-area-inset-top))',
+          paddingBottom: '8px',
+          minHeight: '56px',
+        }}
       >
-        {/* Botón regresar - MÁS VISIBLE */}
+        {/* Botón regresar - GRANDE Y VISIBLE */}
         <button 
-          className="flex items-center gap-2 px-3 py-2.5 bg-white/15 hover:bg-white/25 active:bg-white/10 rounded-xl transition-all active:scale-95"
-          onClick={onClose}
+          className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-3 bg-white/20 hover:bg-white/30 active:bg-white/10 rounded-xl transition-all active:scale-95 min-w-[90px] sm:min-w-[100px]"
+          onClick={handleClose}
+          style={{ touchAction: 'manipulation' }}
         >
-          <ChevronLeft className="w-6 h-6 text-white" />
-          <span className="text-white font-medium text-sm">Volver</span>
+          <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
+          <span className="text-white font-semibold text-base sm:text-lg">Volver</span>
         </button>
         
         {/* Contador de fotos */}
-        <div className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full">
+        <div className="px-3 py-1.5 bg-white/15 backdrop-blur-sm rounded-full">
           <span className="text-white text-sm font-medium">
             {currentIndex + 1} / {fotos.length}
           </span>
         </div>
         
-        {/* Acciones */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            className={`p-2.5 rounded-full transition-all ${showInfo ? 'bg-white/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-          >
-            <Info className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Info button */}
+        <button
+          onClick={() => setShowInfo(!showInfo)}
+          className={`p-3 rounded-xl transition-all ${showInfo ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:text-white hover:bg-white/20'}`}
+          style={{ touchAction: 'manipulation' }}
+        >
+          <Info className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
       </div>
       
       {/* Área de imagen con gestos */}
       <div 
-        className="flex-1 flex items-center justify-center overflow-hidden relative"
+        className="flex-1 flex items-center justify-center overflow-hidden relative min-h-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Botón anterior */}
+        {/* Botón anterior - Solo desktop */}
         {hasPrev && (
           <button
             onClick={(e) => { e.stopPropagation(); onPrev(); }}
-            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all z-10"
+            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all z-10"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-8 h-8 text-white" />
           </button>
         )}
         
         {/* Imagen */}
-        <div className="relative w-full h-full flex items-center justify-center p-4">
+        <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
@@ -297,20 +322,39 @@ const PhotoViewer = ({
           />
         </div>
         
-        {/* Botón siguiente */}
+        {/* Botón siguiente - Solo desktop */}
         {hasNext && (
           <button
             onClick={(e) => { e.stopPropagation(); onNext(); }}
-            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all z-10"
+            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all z-10"
           >
-            <ChevronRight className="w-6 h-6 text-white" />
+            <ChevronRight className="w-8 h-8 text-white" />
           </button>
+        )}
+        
+        {/* Indicadores de swipe en móvil - Mejorados */}
+        {(hasPrev || hasNext) && (
+          <div className="md:hidden absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-1 pointer-events-none">
+            {hasPrev ? (
+              <div className="p-1.5 bg-white/20 rounded-full">
+                <ChevronLeft className="w-4 h-4 text-white/70" />
+              </div>
+            ) : <div className="w-7" />}
+            {hasNext ? (
+              <div className="p-1.5 bg-white/20 rounded-full">
+                <ChevronRight className="w-4 h-4 text-white/70" />
+              </div>
+            ) : <div className="w-7" />}
+          </div>
         )}
       </div>
       
       {/* Panel de información */}
       {showInfo && (
-        <div className="absolute top-16 right-4 w-72 bg-black/80 backdrop-blur-lg rounded-xl p-4 text-white z-20 animate-fade-in">
+        <div 
+          className="absolute top-20 right-2 sm:right-4 left-2 sm:left-auto w-auto sm:w-72 bg-black/90 backdrop-blur-lg rounded-xl p-4 text-white z-20 animate-fade-in"
+          style={{ maxWidth: 'calc(100% - 16px)' }}
+        >
           <h4 className="font-semibold mb-3">Información</h4>
           <div className="space-y-2 text-sm">
             {foto.titulo && (
@@ -331,25 +375,30 @@ const PhotoViewer = ({
         </div>
       )}
       
-      {/* Footer con acciones y thumbnails */}
+      {/* Footer simplificado con acciones */}
       <div 
-        className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-6 px-4 absolute bottom-0 left-0 right-0"
-        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+        className="flex-shrink-0 bg-black/80 backdrop-blur-md px-2 sm:px-4 pt-3"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        {/* Thumbnails horizontales */}
-        <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
+        {/* Thumbnails horizontales - Más pequeños en móvil */}
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-3 hide-scrollbar">
           {fotos.map((f, idx) => (
             <button
               key={f.id}
               onClick={() => {
-                if (idx > currentIndex) onNext();
-                else if (idx < currentIndex) onPrev();
+                const diff = idx - currentIndex;
+                if (diff > 0) {
+                  for (let i = 0; i < diff; i++) onNext();
+                } else if (diff < 0) {
+                  for (let i = 0; i < Math.abs(diff); i++) onPrev();
+                }
               }}
-              className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 ${
+              className={`flex-shrink-0 w-11 h-11 sm:w-14 sm:h-14 rounded-lg overflow-hidden transition-all duration-200 ${
                 f.id === foto.id 
-                  ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105' 
-                  : 'opacity-50 hover:opacity-80'
+                  ? 'ring-2 ring-white ring-offset-1 ring-offset-black scale-105' 
+                  : 'opacity-40 hover:opacity-70'
               }`}
+              style={{ touchAction: 'manipulation' }}
             >
               <img 
                 src={f.imagen} 
@@ -361,94 +410,56 @@ const PhotoViewer = ({
           ))}
         </div>
         
-        {/* Acciones principales */}
-        <div className="flex items-center justify-center gap-3">
-          {/* Zoom */}
-          <div className="flex items-center gap-1 bg-white/10 rounded-full p-1">
-            <button
-              onClick={() => setZoom(z => Math.max(z - 0.5, 1))}
-              disabled={zoom <= 1}
-              className="p-2 text-white/80 hover:text-white disabled:opacity-30 transition-all"
-            >
-              <ZoomOut className="w-5 h-5" />
-            </button>
-            <span className="text-white/60 text-xs w-12 text-center">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={() => setZoom(z => Math.min(z + 0.5, 3))}
-              disabled={zoom >= 3}
-              className="p-2 text-white/80 hover:text-white disabled:opacity-30 transition-all"
-            >
-              <ZoomIn className="w-5 h-5" />
-            </button>
-          </div>
-          
-          <div className="w-px h-8 bg-white/20" />
-          
+        {/* Acciones principales - Simplificadas */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
           {/* WhatsApp */}
           <button
             onClick={(e) => { e.stopPropagation(); onShare(foto, 'whatsapp'); }}
-            className="p-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-105 active:scale-95"
+            className="p-3 sm:p-3.5 bg-green-500 text-white rounded-full hover:bg-green-600 transition-all active:scale-95"
+            style={{ touchAction: 'manipulation' }}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           
           {/* Compartir */}
           <button
             onClick={(e) => { e.stopPropagation(); onShare(foto, 'native'); }}
-            className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+            className="p-3 sm:p-3.5 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all active:scale-95"
+            style={{ touchAction: 'manipulation' }}
           >
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           
           {/* Descargar */}
           <button
             onClick={(e) => { e.stopPropagation(); onDownload(foto); }}
-            className="p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+            className="p-3 sm:p-3.5 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all active:scale-95"
+            style={{ touchAction: 'manipulation' }}
           >
-            <Download className="w-5 h-5" />
+            <Download className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           
           {/* Eliminar */}
           {canDelete && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(foto.id); }}
-              className="p-3 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-all hover:scale-105 active:scale-95"
+              className="p-3 sm:p-3.5 bg-red-500/80 text-white rounded-full hover:bg-red-500 transition-all active:scale-95"
+              style={{ touchAction: 'manipulation' }}
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           )}
         </div>
       </div>
       
-      {/* Indicadores de swipe en móvil */}
-      {(hasPrev || hasNext) && (
-        <div className="md:hidden absolute top-1/2 left-0 right-0 flex justify-between px-2 pointer-events-none">
-          {hasPrev && (
-            <div className="p-2 bg-white/10 rounded-full animate-pulse">
-              <ChevronLeft className="w-5 h-5 text-white/50" />
-            </div>
-          )}
-          {!hasPrev && <div />}
-          {hasNext && (
-            <div className="p-2 bg-white/10 rounded-full animate-pulse">
-              <ChevronRight className="w-5 h-5 text-white/50" />
-            </div>
-          )}
-        </div>
-      )}
-      
       {/* CSS para animación */}
       <style>{`
-        @keyframes fadeInUp {
+        @keyframes photoViewerFadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
         .hide-scrollbar::-webkit-scrollbar {
@@ -458,7 +469,8 @@ const PhotoViewer = ({
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
 };
