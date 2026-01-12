@@ -19,6 +19,7 @@ import {
   Info,
   Grid,
   LayoutGrid,
+  ZoomIn,
 } from 'lucide-react';
 
 // Skeleton para carga de fotos
