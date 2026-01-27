@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Configuración base del cliente API
 // El backend tiene rutas como /api/finanzas/, /api/produccion/, etc.
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,

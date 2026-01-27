@@ -1,7 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import { useProveedores } from '../../../hooks/queries/finanzas';
 import { useCreateProveedor, useUpdateProveedor, useDeleteProveedor } from '../../../hooks/mutations/finanzas';
-import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
+import { 
+  Card, 
+  Button, 
+  BottomSheet, 
+  Input, 
+  Textarea,
+  LoadingSpinner, 
+  Toast,
+  FAB,
+  EmptyState,
+  PageHeader 
+} from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
 import { Plus, Users } from 'lucide-react';
 
@@ -91,42 +102,58 @@ const ProveedoresPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
-          <p className="text-gray-500">Gestión de proveedores y servicios</p>
-        </div>
-        <Button icon={Plus} onClick={() => setModalOpen(true)}>
-          Nuevo Proveedor
-        </Button>
-      </div>
+      {/* Header - Desktop button hidden on mobile */}
+      <PageHeader
+        title="Proveedores"
+        subtitle="Gestión de proveedores y servicios"
+        action={{
+          label: 'Nuevo Proveedor',
+          icon: Plus,
+          onClick: () => setModalOpen(true),
+        }}
+      />
 
       {/* Grid de proveedores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {proveedores.map((proveedor) => (
-          <ProveedorCard
-            key={proveedor.id}
-            proveedor={proveedor}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+      {proveedores.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {proveedores.map((proveedor) => (
+            <ProveedorCard
+              key={proveedor.id}
+              proveedor={proveedor}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={Users}
+            title="No hay proveedores registrados"
+            description="Agrega tu primer proveedor para comenzar"
+            action={{
+              label: 'Agregar Proveedor',
+              icon: Plus,
+              onClick: () => setModalOpen(true),
+            }}
           />
-        ))}
+        </Card>
+      )}
 
-        {proveedores.length === 0 && (
-          <Card className="col-span-full text-center py-12">
-            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No hay proveedores registrados</p>
-          </Card>
-        )}
-      </div>
+      {/* FAB - Mobile only */}
+      <FAB
+        onClick={() => setModalOpen(true)}
+        icon={Plus}
+        label="Nuevo"
+        color="emerald"
+      />
 
-      {/* Modal */}
-      <Modal
+      {/* BottomSheet Form */}
+      <BottomSheet
         isOpen={modalOpen}
         onClose={cerrarModal}
         title={editando ? 'Editar Proveedor' : 'Nuevo Proveedor'}
-        size="md"
+        height="auto"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input
@@ -151,16 +178,13 @@ const ProveedoresPage = () => {
             placeholder="Ej: 70012345"
           />
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Dirección</label>
-            <textarea
-              value={formData.direccion}
-              onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-              placeholder="Dirección del proveedor"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-              rows={2}
-            />
-          </div>
+          <Textarea
+            label="Dirección"
+            value={formData.direccion}
+            onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+            placeholder="Dirección del proveedor"
+            rows={2}
+          />
 
           <div className="flex gap-3 pt-4">
             <Button variant="secondary" onClick={cerrarModal} className="flex-1">
@@ -171,7 +195,7 @@ const ProveedoresPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>

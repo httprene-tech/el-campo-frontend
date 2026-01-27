@@ -2,16 +2,24 @@ import React, { useState } from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useCreateProyecto, useExportPDFProyecto } from '../../../hooks/mutations/finanzas';
-import { Card, Button, Modal, Input, SkeletonCard, Toast } from '../../../components/common';
+import { 
+  Card, 
+  Button, 
+  BottomSheet, 
+  Input, 
+  Textarea,
+  SkeletonCard, 
+  Toast, 
+  FAB,
+  EmptyState,
+  PageHeader 
+} from '../../../components/common';
 import {
   Plus,
   FolderOpen,
   Calendar,
-  Wallet,
   Check,
   Download,
-  Trash2,
-  TrendingUp,
 } from 'lucide-react';
 
 const ProyectosPage = () => {
@@ -98,138 +106,149 @@ const ProyectosPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proyectos</h1>
-          <p className="text-gray-500">Gestión de proyectos de construcción</p>
-        </div>
-        {isAdmin() && (
-          <Button icon={Plus} onClick={() => setModalOpen(true)}>
-            Nuevo Proyecto
-          </Button>
-        )}
-      </div>
+      {/* Header - Desktop button hidden on mobile, FAB takes over */}
+      <PageHeader
+        title="Proyectos"
+        subtitle="Gestión de proyectos de construcción"
+        action={isAdmin() ? {
+          label: 'Nuevo Proyecto',
+          icon: Plus,
+          onClick: () => setModalOpen(true),
+        } : null}
+      />
 
       {/* Lista de proyectos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {proyectos.map((proyecto) => {
-          const esActivo = proyectoActivo?.id === proyecto.id;
-          const porcentaje = proyecto.porcentaje_consumido || 0;
-          const saldo = Number(proyecto.saldo_restante) || 0;
-          
-          return (
-            <Card 
-              key={proyecto.id} 
-              hover 
-              className={`relative ${esActivo ? 'ring-2 ring-emerald-500' : ''}`}
-              onClick={() => seleccionarProyecto(proyecto)}
-            >
-              {esActivo && (
-                <div className="absolute top-3 right-3 p-1.5 bg-emerald-500 rounded-full">
-                  <Check className="w-4 h-4 text-white" />
-                </div>
-              )}
-              
-              <div className="flex items-start gap-3 mb-4">
-                <div className={`p-3 rounded-xl ${esActivo ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                  <FolderOpen className={`w-6 h-6 ${esActivo ? 'text-emerald-600' : 'text-gray-500'}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{proyecto.nombre}</h3>
-                  <p className="text-sm text-gray-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(proyecto.fecha_inicio).toLocaleDateString('es-BO')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Presupuesto</span>
-                  <span className="font-semibold text-gray-900">
-                    {Number(proyecto.presupuesto_objetivo).toLocaleString('es-BO')} Bs
-                  </span>
-                </div>
-                
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Gastado</span>
-                  <span className="font-medium text-red-600">
-                    {Number(proyecto.total_gastado).toLocaleString('es-BO')} Bs
-                  </span>
-                </div>
-                
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Disponible</span>
-                  <span className={`font-semibold ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {saldo.toLocaleString('es-BO')} Bs
-                  </span>
-                </div>
-
-                {/* Barra de progreso */}
-                <div className="pt-2">
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all ${
-                        porcentaje > 80 ? 'bg-red-500' : porcentaje > 60 ? 'bg-amber-500' : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${Math.min(porcentaje, 100)}%` }}
-                    />
+      {proyectos.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {proyectos.map((proyecto) => {
+            const esActivo = proyectoActivo?.id === proyecto.id;
+            const porcentaje = proyecto.porcentaje_consumido || 0;
+            const saldo = Number(proyecto.saldo_restante) || 0;
+            
+            return (
+              <Card 
+                key={proyecto.id} 
+                hover 
+                className={`relative ${esActivo ? 'ring-2 ring-emerald-500' : ''}`}
+                onClick={() => seleccionarProyecto(proyecto)}
+              >
+                {esActivo && (
+                  <div className="absolute top-3 right-3 p-1.5 bg-emerald-500 rounded-full">
+                    <Check className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1 text-right">{porcentaje.toFixed(1)}% usado</p>
+                )}
+                
+                <div className="flex items-start gap-3 mb-4">
+                  <div className={`p-3 rounded-xl ${esActivo ? 'bg-emerald-100' : 'bg-gray-100'}`}>
+                    <FolderOpen className={`w-6 h-6 ${esActivo ? 'text-emerald-600' : 'text-gray-500'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate">{proyecto.nombre}</h3>
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(proyecto.fecha_inicio).toLocaleDateString('es-BO')}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Botones de reportes */}
-                <div className="pt-3 border-t border-gray-100 flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={Download}
-                    loading={downloading === proyecto.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleExportPDF(proyecto);
-                    }}
-                    className="flex-1 text-xs"
-                  >
-                    PDF
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleExportPDF(proyecto, 'mes_actual');
-                    }}
-                    className="flex-1 text-xs"
-                  >
-                    Este mes
-                  </Button>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Presupuesto</span>
+                    <span className="font-semibold text-gray-900">
+                      {Number(proyecto.presupuesto_objetivo).toLocaleString('es-BO')} Bs
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Gastado</span>
+                    <span className="font-medium text-red-600">
+                      {Number(proyecto.total_gastado).toLocaleString('es-BO')} Bs
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Disponible</span>
+                    <span className={`font-semibold ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {saldo.toLocaleString('es-BO')} Bs
+                    </span>
+                  </div>
+
+                  {/* Barra de progreso */}
+                  <div className="pt-2">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all ${
+                          porcentaje > 80 ? 'bg-red-500' : porcentaje > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.min(porcentaje, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 text-right">{porcentaje.toFixed(1)}% usado</p>
+                  </div>
+
+                  {/* Botones de reportes */}
+                  <div className="pt-3 border-t border-gray-100 flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={Download}
+                      loading={downloading === proyecto.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportPDF(proyecto);
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      PDF
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportPDF(proyecto, 'mes_actual');
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      Este mes
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={FolderOpen}
+            title="No hay proyectos creados"
+            description="Crea tu primer proyecto para comenzar a gestionar tus finanzas"
+            action={isAdmin() ? {
+              label: 'Crear Proyecto',
+              icon: Plus,
+              onClick: () => setModalOpen(true),
+            } : null}
+          />
+        </Card>
+      )}
 
-        {proyectos.length === 0 && (
-          <Card className="col-span-full text-center py-12">
-            <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No hay proyectos creados</p>
-            {isAdmin() && (
-              <Button onClick={() => setModalOpen(true)} className="mt-4">
-                Crear primer proyecto
-              </Button>
-            )}
-          </Card>
-        )}
-      </div>
+      {/* FAB - Mobile only */}
+      {isAdmin() && (
+        <FAB
+          onClick={() => setModalOpen(true)}
+          icon={Plus}
+          label="Nuevo"
+          color="emerald"
+        />
+      )}
 
-      {/* Modal Nuevo Proyecto */}
-      <Modal
+      {/* BottomSheet Form - Replaces Modal for better mobile UX */}
+      <BottomSheet
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Nuevo Proyecto"
-        size="md"
+        height="auto"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input
@@ -258,16 +277,13 @@ const ProyectosPage = () => {
             required
           />
           
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Descripción</label>
-            <textarea
-              value={formData.descripcion}
-              onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-              placeholder="Descripción del proyecto..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Descripción"
+            value={formData.descripcion}
+            onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+            placeholder="Descripción del proyecto..."
+            rows={3}
+          />
 
           <div className="flex gap-3 pt-4">
             <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">
@@ -278,7 +294,7 @@ const ProyectosPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>

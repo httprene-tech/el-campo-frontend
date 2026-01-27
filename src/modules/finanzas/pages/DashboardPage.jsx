@@ -2,7 +2,7 @@ import React from 'react';
 import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useGastos, useResumenMensualGastos, useResumenPorCategoria } from '../../../hooks/queries/finanzas';
-import { Card, SkeletonCard, SkeletonRow } from '../../../components/common';
+import { Card, SkeletonCard, SkeletonRow, EmptyState } from '../../../components/common';
 import {
   AreaChart,
   Area,
@@ -120,15 +120,13 @@ const DashboardPage = () => {
 
   if (!proyectoActivo) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm mt-6">
-        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-          <Egg className="w-10 h-10 text-gray-300" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Sin proyecto activo</h2>
-        <p className="text-gray-500 max-w-xs text-center">
-          Para ver el resumen, primero debes seleccionar o crear un proyecto en la sección correspondiente.
-        </p>
-      </div>
+      <Card className="mt-6">
+        <EmptyState
+          icon={Egg}
+          title="Sin proyecto activo"
+          description="Para ver el resumen, primero debes seleccionar o crear un proyecto en la sección correspondiente."
+        />
+      </Card>
     );
   }
 

@@ -2,9 +2,29 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useCarpetas, useDocumentos } from '../../../hooks/queries/finanzas';
 import { useCreateCarpeta, useDeleteCarpeta, useUploadDocumento, useDeleteDocumento } from '../../../hooks/mutations/finanzas';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { 
+  Card, 
+  Button, 
+  BottomSheet, 
+  Input, 
+  Select,
+  Textarea,
+  LoadingSpinner, 
+  Toast,
+  FAB,
+  EmptyState,
+  PageHeader 
+} from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
-import { Plus, FileText, Folder, FolderPlus, Upload, ChevronLeft, File } from 'lucide-react';
+import { 
+  Plus, 
+  FileText, 
+  Folder, 
+  FolderPlus, 
+  Upload, 
+  ChevronLeft, 
+  File 
+} from 'lucide-react';
 
 // Componentes extraídos
 import { CarpetaCard, DocumentoRow } from '../components';
@@ -153,39 +173,59 @@ const DocumentosPage = () => {
   if (!carpetaActiva) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Documentos</h1>
-            <p className="text-gray-500">Gestión de documentos del proyecto</p>
+        {/* Header */}
+        <PageHeader
+          title="Documentos"
+          subtitle="Gestión de documentos del proyecto"
+          action={{
+            label: 'Nueva Carpeta',
+            icon: FolderPlus,
+            onClick: () => setModalCarpeta(true),
+          }}
+        />
+
+        {/* Grid de carpetas */}
+        {carpetas.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {carpetas.map((carpeta) => (
+              <CarpetaCard
+                key={carpeta.id}
+                carpeta={carpeta}
+                onClick={() => setCarpetaActiva(carpeta)}
+                onDelete={handleDeleteCarpeta}
+              />
+            ))}
           </div>
-          <Button icon={FolderPlus} onClick={() => setModalCarpeta(true)}>
-            Nueva Carpeta
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {carpetas.map((carpeta) => (
-            <CarpetaCard
-              key={carpeta.id}
-              carpeta={carpeta}
-              onClick={() => setCarpetaActiva(carpeta)}
-              onDelete={handleDeleteCarpeta}
+        ) : (
+          <Card>
+            <EmptyState
+              icon={Folder}
+              title="No hay carpetas creadas"
+              description="Crea tu primera carpeta para organizar los documentos"
+              action={{
+                label: 'Crear carpeta',
+                icon: FolderPlus,
+                onClick: () => setModalCarpeta(true),
+              }}
             />
-          ))}
+          </Card>
+        )}
 
-          {carpetas.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Folder className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No hay carpetas creadas</p>
-              <Button onClick={() => setModalCarpeta(true)} className="mt-4">
-                Crear primera carpeta
-              </Button>
-            </div>
-          )}
-        </div>
+        {/* FAB - Mobile only */}
+        <FAB
+          onClick={() => setModalCarpeta(true)}
+          icon={Plus}
+          label="Carpeta"
+          color="emerald"
+        />
 
-        {/* Modal Nueva Carpeta */}
-        <Modal isOpen={modalCarpeta} onClose={() => setModalCarpeta(false)} title="Nueva Carpeta" size="sm">
+        {/* BottomSheet Nueva Carpeta */}
+        <BottomSheet
+          isOpen={modalCarpeta}
+          onClose={() => setModalCarpeta(false)}
+          title="Nueva Carpeta"
+          height="auto"
+        >
           <form onSubmit={handleCrearCarpeta} className="space-y-5">
             <Input
               label="Nombre de la Carpeta"
@@ -195,16 +235,13 @@ const DocumentosPage = () => {
               required
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700">Descripción</label>
-              <textarea
-                value={nuevaCarpeta.descripcion}
-                onChange={(e) => setNuevaCarpeta({ ...nuevaCarpeta, descripcion: e.target.value })}
-                placeholder="Descripción de la carpeta..."
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                rows={3}
-              />
-            </div>
+            <Textarea
+              label="Descripción"
+              value={nuevaCarpeta.descripcion}
+              onChange={(e) => setNuevaCarpeta({ ...nuevaCarpeta, descripcion: e.target.value })}
+              placeholder="Descripción de la carpeta..."
+              rows={3}
+            />
 
             <div className="flex gap-3">
               <Button variant="secondary" onClick={() => setModalCarpeta(false)} className="flex-1">
@@ -215,7 +252,7 @@ const DocumentosPage = () => {
               </Button>
             </div>
           </form>
-        </Modal>
+        </BottomSheet>
 
         {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       </div>
@@ -225,31 +262,26 @@ const DocumentosPage = () => {
   // Vista de documentos en carpeta
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setCarpetaActiva(null)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{carpetaActiva.nombre}</h1>
-            <p className="text-gray-500">
-              {documentos.length} documento{documentos.length !== 1 && 's'}
-            </p>
-          </div>
-        </div>
-        <Button icon={Upload} onClick={() => setModalDocumento(true)}>
-          Subir Documento
-        </Button>
-      </div>
+      {/* Header with back button */}
+      <PageHeader
+        title={carpetaActiva.nombre}
+        subtitle={`${documentos.length} documento${documentos.length !== 1 ? 's' : ''}`}
+        backButton={{
+          icon: ChevronLeft,
+          onClick: () => setCarpetaActiva(null),
+        }}
+        action={{
+          label: 'Subir Documento',
+          icon: Upload,
+          onClick: () => setModalDocumento(true),
+        }}
+      />
 
       {/* Lista de documentos */}
-      <Card padding="none">
-        <div className="divide-y divide-gray-50">
-          {documentos.length > 0 ? (
-            documentos.map((doc) => (
+      {documentos.length > 0 ? (
+        <Card padding="none">
+          <div className="divide-y divide-gray-50">
+            {documentos.map((doc) => (
               <DocumentoRow
                 key={doc.id}
                 doc={doc}
@@ -257,19 +289,39 @@ const DocumentosPage = () => {
                 onDelete={handleDeleteDocumento}
                 userId={user?.user_id}
               />
-            ))
-          ) : (
-            <div className="p-12 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">Esta carpeta está vacía</p>
-              <Button onClick={() => setModalDocumento(true)}>Subir primer documento</Button>
-            </div>
-          )}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={FileText}
+            title="Carpeta vacía"
+            description="Sube el primer documento a esta carpeta"
+            action={{
+              label: 'Subir documento',
+              icon: Upload,
+              onClick: () => setModalDocumento(true),
+            }}
+          />
+        </Card>
+      )}
 
-      {/* Modal Subir Documento */}
-      <Modal isOpen={modalDocumento} onClose={() => setModalDocumento(false)} title="Subir Documento" size="md">
+      {/* FAB - Mobile only */}
+      <FAB
+        onClick={() => setModalDocumento(true)}
+        icon={Upload}
+        label="Subir"
+        color="emerald"
+      />
+
+      {/* BottomSheet Subir Documento */}
+      <BottomSheet
+        isOpen={modalDocumento}
+        onClose={() => setModalDocumento(false)}
+        title="Subir Documento"
+        height="auto"
+      >
         <form onSubmit={handleSubirDocumento} className="space-y-5">
           <Input
             label="Nombre del Documento"
@@ -326,16 +378,13 @@ const DocumentosPage = () => {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Descripción (opcional)</label>
-            <textarea
-              value={nuevoDocumento.descripcion}
-              onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, descripcion: e.target.value })}
-              placeholder="Notas sobre este documento..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              rows={2}
-            />
-          </div>
+          <Textarea
+            label="Descripción (opcional)"
+            value={nuevoDocumento.descripcion}
+            onChange={(e) => setNuevoDocumento({ ...nuevoDocumento, descripcion: e.target.value })}
+            placeholder="Notas sobre este documento..."
+            rows={2}
+          />
 
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setModalDocumento(false)} className="flex-1">
@@ -346,7 +395,7 @@ const DocumentosPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>

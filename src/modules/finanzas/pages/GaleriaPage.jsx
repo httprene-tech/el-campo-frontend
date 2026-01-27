@@ -2,9 +2,28 @@ import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useAlbumes, useFotos } from '../../../hooks/queries/finanzas';
 import { useCreateAlbum, useUploadFoto, useDeleteFoto, useDeleteAlbum } from '../../../hooks/mutations/finanzas';
-import { Card, Button, Modal, Input, LoadingSpinner, Toast } from '../../../components/common';
+import { 
+  Card, 
+  Button, 
+  BottomSheet, 
+  Input, 
+  Textarea,
+  LoadingSpinner, 
+  Toast,
+  FAB,
+  EmptyState,
+  PageHeader 
+} from '../../../components/common';
 import { extractApiData } from '../../../utils/formatters';
-import { Plus, Image, Upload, ChevronLeft, Camera, Grid, LayoutGrid } from 'lucide-react';
+import { 
+  Plus, 
+  Image, 
+  Upload, 
+  ChevronLeft, 
+  Camera, 
+  Grid, 
+  LayoutGrid 
+} from 'lucide-react';
 
 // Componentes extraídos
 import { PhotoViewer, AlbumCard, FotoCard } from '../components';
@@ -193,44 +212,61 @@ const GaleriaPage = () => {
   if (!albumActivo) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Galería</h1>
-            <p className="text-gray-500">
-              {albumes.length} álbum{albumes.length !== 1 && 'es'} de fotos
-            </p>
+        {/* Header */}
+        <PageHeader
+          title="Galería"
+          subtitle={`${albumes.length} álbum${albumes.length !== 1 ? 'es' : ''} de fotos`}
+          action={{
+            label: 'Nuevo Álbum',
+            icon: Plus,
+            onClick: () => setModalAlbum(true),
+          }}
+        />
+
+        {/* Grid de álbumes */}
+        {albumes.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {albumes.map((album) => (
+              <AlbumCard
+                key={album.id}
+                album={album}
+                onClick={() => setAlbumActivo(album)}
+                onDelete={handleDeleteAlbum}
+                getMediaUrl={getMediaUrl}
+                userId={user?.user_id}
+              />
+            ))}
           </div>
-          <Button icon={Plus} onClick={() => setModalAlbum(true)}>
-            Nuevo Álbum
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {albumes.map((album) => (
-            <AlbumCard
-              key={album.id}
-              album={album}
-              onClick={() => setAlbumActivo(album)}
-              onDelete={handleDeleteAlbum}
-              getMediaUrl={getMediaUrl}
-              userId={user?.user_id}
+        ) : (
+          <Card>
+            <EmptyState
+              icon={Image}
+              title="Sin álbumes"
+              description="Crea tu primer álbum para organizar las fotos"
+              action={{
+                label: 'Crear álbum',
+                icon: Plus,
+                onClick: () => setModalAlbum(true),
+              }}
             />
-          ))}
+          </Card>
+        )}
 
-          {albumes.length === 0 && (
-            <div className="col-span-full text-center py-16">
-              <div className="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Image className="w-10 h-10 text-emerald-300" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sin álbumes</h3>
-              <p className="text-gray-500 mb-6">Crea tu primer álbum para organizar las fotos</p>
-              <Button onClick={() => setModalAlbum(true)}>Crear álbum</Button>
-            </div>
-          )}
-        </div>
+        {/* FAB - Mobile only */}
+        <FAB
+          onClick={() => setModalAlbum(true)}
+          icon={Plus}
+          label="Álbum"
+          color="emerald"
+        />
 
-        {/* Modal Nuevo Álbum */}
-        <Modal isOpen={modalAlbum} onClose={() => setModalAlbum(false)} title="Nuevo Álbum" size="sm">
+        {/* BottomSheet Nuevo Álbum */}
+        <BottomSheet
+          isOpen={modalAlbum}
+          onClose={() => setModalAlbum(false)}
+          title="Nuevo Álbum"
+          height="auto"
+        >
           <form onSubmit={handleCrearAlbum} className="space-y-5">
             <Input
               label="Nombre del Álbum"
@@ -240,16 +276,13 @@ const GaleriaPage = () => {
               required
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700">Descripción</label>
-              <textarea
-                value={nuevoAlbum.descripcion}
-                onChange={(e) => setNuevoAlbum({ ...nuevoAlbum, descripcion: e.target.value })}
-                placeholder="Descripción del álbum..."
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                rows={3}
-              />
-            </div>
+            <Textarea
+              label="Descripción"
+              value={nuevoAlbum.descripcion}
+              onChange={(e) => setNuevoAlbum({ ...nuevoAlbum, descripcion: e.target.value })}
+              placeholder="Descripción del álbum..."
+              rows={3}
+            />
 
             <div className="flex gap-3">
               <Button variant="secondary" onClick={() => setModalAlbum(false)} className="flex-1">
@@ -260,7 +293,7 @@ const GaleriaPage = () => {
               </Button>
             </div>
           </form>
-        </Modal>
+        </BottomSheet>
 
         {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       </div>
@@ -270,73 +303,84 @@ const GaleriaPage = () => {
   // Vista de fotos del álbum
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setAlbumActivo(null)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{albumActivo.nombre}</h1>
-            <p className="text-gray-500">
-              {fotos.length} foto{fotos.length !== 1 && 's'}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {/* Toggle grid size */}
-          <button
-            onClick={() => setGridSize((s) => (s === 'normal' ? 'compact' : 'normal'))}
-            className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
-            title={gridSize === 'normal' ? 'Vista compacta' : 'Vista normal'}
-          >
-            {gridSize === 'normal' ? <LayoutGrid className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
-          </button>
+      {/* Header with back button */}
+      <PageHeader
+        title={albumActivo.nombre}
+        subtitle={`${fotos.length} foto${fotos.length !== 1 ? 's' : ''}`}
+        backButton={{
+          icon: ChevronLeft,
+          onClick: () => setAlbumActivo(null),
+        }}
+      />
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleSubirFotos(Array.from(e.target.files))}
-            className="hidden"
-          />
-          <Button icon={Upload} onClick={() => fileInputRef.current?.click()} loading={submitting}>
-            <span className="hidden sm:inline">Subir Fotos</span>
-            <span className="sm:hidden">Subir</span>
-          </Button>
-        </div>
+      {/* Actions bar */}
+      <div className="flex items-center justify-end gap-2">
+        {/* Toggle grid size */}
+        <button
+          onClick={() => setGridSize((s) => (s === 'normal' ? 'compact' : 'normal'))}
+          className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
+          title={gridSize === 'normal' ? 'Vista compacta' : 'Vista normal'}
+        >
+          {gridSize === 'normal' ? <LayoutGrid className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => handleSubirFotos(Array.from(e.target.files))}
+          className="hidden"
+        />
+        <Button 
+          icon={Upload} 
+          onClick={() => fileInputRef.current?.click()} 
+          loading={submitting}
+          className="hidden sm:flex"
+        >
+          Subir Fotos
+        </Button>
       </div>
 
       {/* Grid de fotos */}
-      <div
-        className={`grid gap-2 sm:gap-3 ${
-          gridSize === 'compact'
-            ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'
-            : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-        }`}
-      >
-        {loadingFotos ? (
-          Array.from({ length: 8 }).map((_, i) => <PhotoSkeleton key={i} />)
-        ) : (
-          fotos.map((foto, idx) => (
-            <FotoCard key={foto.id} foto={foto} index={idx} onClick={() => setFotoActiva(foto)} />
-          ))
-        )}
+      {fotos.length > 0 || loadingFotos ? (
+        <div
+          className={`grid gap-2 sm:gap-3 ${
+            gridSize === 'compact'
+              ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'
+              : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+          }`}
+        >
+          {loadingFotos ? (
+            Array.from({ length: 8 }).map((_, i) => <PhotoSkeleton key={i} />)
+          ) : (
+            fotos.map((foto, idx) => (
+              <FotoCard key={foto.id} foto={foto} index={idx} onClick={() => setFotoActiva(foto)} />
+            ))
+          )}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={Camera}
+            title="Álbum vacío"
+            description="Sube las primeras fotos a este álbum"
+            action={{
+              label: 'Subir fotos',
+              icon: Upload,
+              onClick: () => fileInputRef.current?.click(),
+            }}
+          />
+        </Card>
+      )}
 
-        {fotos.length === 0 && !loadingFotos && (
-          <Card className="col-span-full text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Álbum vacío</h3>
-            <p className="text-gray-500 mb-6">Sube las primeras fotos a este álbum</p>
-            <Button onClick={() => fileInputRef.current?.click()}>Subir fotos</Button>
-          </Card>
-        )}
-      </div>
+      {/* FAB - Mobile only for upload */}
+      <FAB
+        onClick={() => fileInputRef.current?.click()}
+        icon={Upload}
+        label="Subir"
+        color="emerald"
+      />
 
       {/* Visor de fotos a pantalla completa */}
       {fotoActiva && (

@@ -94,11 +94,12 @@ const BottomSheet = ({
 
   const content = (
     <div className="fixed inset-0 z-[9999]">
-      {/* Backdrop */}
+      {/* Backdrop - smooth opacity transition */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen && !isDragging ? 'opacity-100' : isDragging ? `opacity-${Math.max(0.3, 1 - dragY/300).toFixed(1)}` : 'opacity-0'
-        }`}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+        style={{
+          opacity: isOpen ? (isDragging ? Math.max(0.3, 1 - dragY / 300) : 1) : 0,
+        }}
         onClick={onClose}
       />
 
@@ -119,7 +120,8 @@ const BottomSheet = ({
             transform: isOpen 
               ? `translateY(${dragY}px)` 
               : 'translateY(100%)',
-            transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+            transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
           }}
           onTransitionEnd={handleAnimationEnd}
           onClick={(e) => e.stopPropagation()}

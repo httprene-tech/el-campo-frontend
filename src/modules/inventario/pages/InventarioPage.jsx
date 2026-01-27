@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { useMateriales, useMovimientos } from '../../../hooks/queries/inventario';
 import { useCreateMaterial, useCreateMovimiento } from '../../../hooks/mutations/inventario';
-import { Card, Button, Modal, Input, Select, LoadingSpinner, Toast } from '../../../components/common';
+import { 
+  Card, 
+  Button, 
+  BottomSheet, 
+  Input, 
+  Select, 
+  LoadingSpinner, 
+  Toast,
+  FAB,
+  EmptyState,
+  PageHeader 
+} from '../../../components/common';
 import { Plus, Package, ArrowUpCircle, ArrowDownCircle, AlertTriangle, Boxes } from 'lucide-react';
-import { UNIDADES_MEDIDA, TIPOS_MOVIMIENTO, TIPOS_INVENTARIO } from '../../../utils/constants';
+import { UNIDADES_MEDIDA, TIPOS_INVENTARIO } from '../../../utils/constants';
 import { formatNumber } from '../../../utils/formatters';
 
 const InventarioPage = () => {
@@ -100,21 +111,18 @@ const InventarioPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-          <p className="text-gray-500">Control de materiales de construcción</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" icon={Plus} onClick={() => setModalMaterial(true)}>
-            Nuevo Material
-          </Button>
-          <Button icon={ArrowUpCircle} onClick={() => setModalMovimiento(true)}>
-            Registrar Movimiento
-          </Button>
-        </div>
-      </div>
+      {/* Header */}
+      <PageHeader
+        title="Inventario"
+        subtitle="Control de materiales de construcción"
+        action={{
+          label: 'Movimiento',
+          icon: ArrowUpCircle,
+          onClick: () => setModalMovimiento(true),
+        }}
+      />
 
+      {/* Alert for low stock */}
       {materialesConAlerta.length > 0 && (
         <Card className="bg-amber-50 border-amber-200">
           <div className="flex items-start gap-3">
@@ -130,10 +138,20 @@ const InventarioPage = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Materials List */}
         <div className="lg:col-span-2">
           <Card padding="none">
-            <div className="p-5 border-b border-gray-100">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold text-gray-900">Materiales</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                icon={Plus} 
+                onClick={() => setModalMaterial(true)}
+                className="hidden sm:flex"
+              >
+                Nuevo
+              </Button>
             </div>
             <div className="divide-y divide-gray-50">
               {materiales.length > 0 ? (
@@ -165,15 +183,22 @@ const InventarioPage = () => {
                   );
                 })
               ) : (
-                <div className="p-12 text-center">
-                  <Boxes className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No hay materiales registrados</p>
-                </div>
+                <EmptyState
+                  icon={Boxes}
+                  title="Sin materiales"
+                  description="Agrega tu primer material al inventario"
+                  action={{
+                    label: 'Nuevo Material',
+                    icon: Plus,
+                    onClick: () => setModalMaterial(true),
+                  }}
+                />
               )}
             </div>
           </Card>
         </div>
 
+        {/* Recent Movements */}
         <div>
           <Card padding="none">
             <div className="p-5 border-b border-gray-100">
@@ -221,7 +246,21 @@ const InventarioPage = () => {
         </div>
       </div>
 
-      <Modal isOpen={modalMaterial} onClose={() => setModalMaterial(false)} title="Nuevo Material" size="sm">
+      {/* FAB - Mobile only */}
+      <FAB
+        onClick={() => setModalMovimiento(true)}
+        icon={ArrowUpCircle}
+        label="Movimiento"
+        color="emerald"
+      />
+
+      {/* BottomSheet: New Material */}
+      <BottomSheet
+        isOpen={modalMaterial}
+        onClose={() => setModalMaterial(false)}
+        title="Nuevo Material"
+        height="auto"
+      >
         <form onSubmit={handleCrearMaterial} className="space-y-5">
           <Input
             label="Nombre"
@@ -270,9 +309,15 @@ const InventarioPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
-      <Modal isOpen={modalMovimiento} onClose={() => setModalMovimiento(false)} title="Registrar Movimiento" size="sm">
+      {/* BottomSheet: New Movement */}
+      <BottomSheet
+        isOpen={modalMovimiento}
+        onClose={() => setModalMovimiento(false)}
+        title="Registrar Movimiento"
+        height="auto"
+      >
         <form onSubmit={handleCrearMovimiento} className="space-y-5">
           <Select
             label="Material"
@@ -316,7 +361,7 @@ const InventarioPage = () => {
             </Button>
           </div>
         </form>
-      </Modal>
+      </BottomSheet>
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>

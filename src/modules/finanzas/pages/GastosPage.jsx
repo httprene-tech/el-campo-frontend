@@ -4,7 +4,7 @@ import { useProyecto } from '../../../context/ProyectoContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useGastos, useCategorias, useProveedores } from '../../../hooks/queries/finanzas';
 import { useCreateGasto, useDeleteGasto } from '../../../hooks/mutations/finanzas';
-import { Card, Button, BottomSheet, Input, Select, LoadingSpinner, Toast, FAB } from '../../../components/common';
+import { Card, Button, BottomSheet, Input, Select, LoadingSpinner, Toast, FAB, EmptyState, PageHeader } from '../../../components/common';
 import usePullToRefresh, { PullToRefreshIndicator } from '../../../hooks/usePullToRefresh';
 import { hapticSuccess, hapticError } from '../../../utils/haptic';
 import { extractApiData } from '../../../utils/formatters';
@@ -183,18 +183,15 @@ const GastosPage = () => {
       <PullToRefreshIndicator progress={pullProgress} isRefreshing={isRefreshing} />
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gastos</h1>
-          <p className="text-gray-500">Registro de gastos del proyecto</p>
-        </div>
-        {/* Desktop button - hidden on mobile (FAB shows instead) */}
-        {canRegister() && (
-          <Button icon={Plus} onClick={() => setModalOpen(true)} className="hidden sm:flex">
-            Nuevo Gasto
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Gastos"
+        subtitle="Registro de gastos del proyecto"
+        action={canRegister() ? {
+          label: 'Nuevo Gasto',
+          icon: Plus,
+          onClick: () => setModalOpen(true),
+        } : null}
+      />
 
       {/* Filtros */}
       <Card>
@@ -276,10 +273,16 @@ const GastosPage = () => {
               </div>
             ))
           ) : (
-             <div className="p-8 text-center">
-              <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No hay gastos registrados</p>
-            </div>
+            <EmptyState
+              icon={Receipt}
+              title="No hay gastos registrados"
+              description="Registra tu primer gasto para comenzar"
+              action={canRegister() ? {
+                label: 'Nuevo Gasto',
+                icon: Plus,
+                onClick: () => setModalOpen(true),
+              } : null}
+            />
           )}
         </div>
 
