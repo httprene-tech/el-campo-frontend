@@ -24,7 +24,7 @@ const Input = ({
       )}
       <div className="relative">
         {Icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
             <Icon className="w-5 h-5" />
           </div>
         )}
@@ -38,7 +38,7 @@ const Input = ({
           className={`
             w-full px-4 py-2.5 rounded-xl border bg-white
             transition-all duration-200
-            placeholder:text-gray-400
+            placeholder:text-gray-600
             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
             ${Icon ? 'pl-11' : ''}
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200'}

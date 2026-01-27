@@ -7,6 +7,7 @@ description: Comprehensive guide and standards for the "Software El Campo" front
 
 ## 1. Project Overview
 - **Stack**: Vite + React + Tailwind CSS (v4) + React Router v7
+- **Language**: **JavaScript (.jsx)** (TypeScript migration aborted, ensure all files are .js/.jsx)
 - **State Management**: React Query (@tanstack/react-query) + Context API (Auth, Proyecto)
 - **PWA**: vite-plugin-pwa (Offline first approach)
 - **Icons**: lucide-react
@@ -17,67 +18,65 @@ description: Comprehensive guide and standards for the "Software El Campo" front
 - **src/api/**: Centralized API layer. `api/modules/*.js` contains per-module endpoints.
 - **src/hooks/**: 
     - `queries/`: React Query GET hooks (useGastos, useLotes, etc.)
-    - `mutations/`: React Query mutation hooks (useCrearGasto, etc.)
+    - `mutations/`: React Query mutation hooks (useCreateGasto, etc.)
 - **src/context/**: Global state (AuthContext, ProyectoContext).
 - **src/utils/**: Helpers (formatters, constants, haptic).
 
-## 3. EXISTING COMMON COMPONENTS (DO NOT RECREATE)
-**ALWAYS check `src/components/common/index.js` first.**
-- **`LoadingSpinner`**: Use for all loading states.
-- **`Button`**: Standard buttons (primary, secondary, danger).
-- **`Input`**: Text inputs with label and error support.
-- **`Select`**: Dropdowns.
-- **`Card`**: Basic container with shadow/rounded corners.
-- **`Modal`**: Center dialogs (desktop/mobile).
-- **`BottomSheet`**: Sliding bottom sheet for Mobile actions/forms. **PREFERRED for mobile forms over Modals.**
-- **`FAB`**: Floating Action Button (bottom-right).
-- **`Toast`**: Notification system.
-- **`Skeleton`**: Loading placeholders (`SkeletonCard`, `SkeletonRow`, `SkeletonPage`).
-- **`PWAInstallBanner`**: Custom install prompt.
+## 3. CORE COMPONENT LIBRARY (Use exclusively)
+**ALWAYS import from `src/components/common`**. Do not implement custom UI if a component exists.
 
-## 4. Coding Standards (Senior Architect Mode)
+| Component | Description | Usage Rule |
+|-----------|-------------|------------|
+| **`PageHeader`** | Standard header with title, subtitle, and desktop action. | **MANDATORY** for every page top. |
+| **`EmptyState`** | Illustration + Title + Action for empty lists. | **MANDATORY** when lists are empty. |
+| **`BottomSheet`** | Sliding sheet (mobile) / Center modal (desktop). | **PREFERRED** for forms and details over `Modal`. |
+| **`FAB`** | Floating Action Button. | **MANDATORY** for primary actions on Mobile. |
+| **`LoadingSpinner`** | Circular loader. | Use for full-page or section loading. |
+| **`Card`** | Container with shadow/rounded corners. | Base for lists and details. |
+| **`Button`** | Standard buttons (primary, secondary). | Use for all interactions. |
+| **`Input` / `Textarea`** | Form fields with consistent styling. | Use for all forms. |
+| **`Select`** | Styled dropdown. | Use for all selections. |
+| **`Toast`** | Notification popup. | Use for success/error feedback. |
 
-### A. Mobile-First & PWA
-- **Touch Targets**: All interactive elements must be at least 44x44px.
-- **Layout**: Use `MainLayout` which handles the responsive sidebar/navbar.
-- **Offline**: Assume low connectivity. Use React Query's caching.
-- **Haptics**: Use `src/utils/haptic.js` for significant user actions (success, error, heavy clicks).
+## 4. Design Patterns & UI/UX Standards
 
-### B. State & Data Fetching
-- **React Query**: 
-    - Use efficiently. Invalidations should be precise.
-    - Separation of concerns: Keep API calls in `src/api` and hooks in `src/hooks`.
-    - **Do not** write `fetch` or `axios` calls directly in components.
+### A. Page Structure
+Every page (`src/modules/*/pages/*.jsx`) must follow this logical structure:
+1. **Hooks**: Data fetching & mutations.
+2. **State**: Local UI state (modals, forms).
+3. **Render**:
+   - `LoadingSpinner` if loading.
+   - `PageHeader` at the top.
+   - List/Grid content OR `EmptyState`.
+   - `FAB` (fixed bottom-right) for mobile main action.
+   - `BottomSheet` containing the creation/edit form.
+   - `Toast` component at the bottom.
 
-### C. Validation & Forms
-- **Validation**: Centralized. Prefer Zod or existing utils.
-- **Feedback**: 
-    - Success -> `toast.success()` + Haptic success.
-    - Error -> `toast.error()` + Haptic error.
+### B. Mobile-First & PWA
+- **Forms**: Use `BottomSheet` with `height="auto"`. It handles mobile drag gestures and desktop centering automatically.
+- **Actions**:
+    - **Desktop**: Button inside `PageHeader` (`action` prop).
+    - **Mobile**: `FAB` component.
+- **Touch**: Targets must be >44px.
+- **Offline**: Use React Query caching. Handle errors gracefully.
 
-### D. CSS / Styling
-- **Tailwind**: Use utility classes.
-- **Colors**: Adhere to the defined palette (likely in `index.css` or Tailwind config).
-- **Dark Mode**: Ensure compatibility if implemented.
+### C. Forms & Validation
+- Reset form state after successful submission.
+- Use `useMemo` for dropdown options derived from queries.
+- Do not use inline `style`, use Tailwind classes.
 
-## 5. Workflow Checklist
-Before implementing any feature:
-1. [ ] **Check Common**: Does a component already exist in `src/components/common`?
-2. [ ] **Check API**: Does the endpoint exist in `src/api/modules`?
-3. [ ] **Check Hooks**: Is there a React Query hook in `src/hooks`?
-4. [ ] **Mobile Review**: Will this look good on a phone? (Use BottomSheet for complex actions on mobile).
+## 5. Coding Workflow
+1. **Check API**: Ensure endpoints exist in `src/api/modules/*.js`.
+2. **Check Hooks**: Ensure React Query hooks exist in `src/hooks/{queries,mutations}/*.js`.
+3. **Build UI**: Assemble using **Shared Components**.
+4. **Mobile Check**: Verify `FAB` and `BottomSheet` behavior.
 
-## 6. API Structure
-- **Base URL**: Configured in `src/api/client.js`.
-- **Modules**:
-    - `finanzas.js`
-    - `produccion.js`
-    - `alimentacion.js`
-    - `salud.js`
-    - `inventario.js`
-    - `calendario.js`
+## 6. API & Data
+- **Client**: `src/api/client.js` (Interceptor for Auth Token & 401 handling).
+- **Queries**: `use*` (e.g., `useGastos`). Returns `{ data, isLoading, error }`.
+- **Mutations**: `useCreate*`, `useUpdate*`. Returns `{ mutateAsync, isPending }`.
 
 ## 7. Key Files
-- `src/App.jsx`: Routing & Suspense boundaries.
-- `src/components/layout/Layout.jsx`: Main application wrapper.
-- `src/context/AuthContext.jsx`: Authentication logic.
+- `src/App.jsx`: Routing.
+- `src/components/common/index.js`: Barrel file for all UI components.
+- `src/index.css`: Global styles & Tailwind directives.

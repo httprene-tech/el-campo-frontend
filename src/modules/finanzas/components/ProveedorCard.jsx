@@ -46,7 +46,7 @@ const ProveedorCard = memo(({ proveedor, onEdit, onDelete }) => (
     <div className="space-y-2">
       {proveedor.telefono && (
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Phone className="w-4 h-4 text-gray-600 flex-shrink-0" />
           <a 
             href={`tel:${proveedor.telefono}`} 
             className="hover:text-emerald-600 transition-colors"
@@ -57,7 +57,7 @@ const ProveedorCard = memo(({ proveedor, onEdit, onDelete }) => (
       )}
       {proveedor.direccion && (
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
           <span className="truncate">{proveedor.direccion}</span>
         </div>
       )}

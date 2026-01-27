@@ -154,7 +154,7 @@ const DashboardPage = () => {
         <Card className="hover:shadow-md transition-all duration-300 border-none bg-white">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Presupuesto</p>
+              <p className="text-gray-600 text-xs font-bold uppercase tracking-wider">Presupuesto</p>
               <p className="text-2xl font-black text-gray-900 mt-1">
                 {formatCurrency(presupuesto)}
               </p>
@@ -171,14 +171,14 @@ const DashboardPage = () => {
         <Card className="hover:shadow-md transition-all duration-300 border-none bg-white">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Invertido</p>
+              <p className="text-gray-600 text-xs font-bold uppercase tracking-wider">Invertido</p>
               <p className="text-2xl font-black text-gray-900 mt-1">
                 {formatCurrency(gastado)}
               </p>
               <div className="flex items-center gap-1 mt-2">
                 <ArrowUpRight className="w-3 h-3 text-amber-600" />
                 <span className="text-xs font-bold text-amber-600">{formatPercentage(porcentaje)}</span>
-                <span className="text-[10px] text-gray-400 ml-1">consumido</span>
+                <span className="text-[10px] text-gray-600 ml-1">consumido</span>
               </div>
             </div>
             <div className="p-3 bg-amber-100 rounded-2xl shadow-sm">
@@ -190,7 +190,7 @@ const DashboardPage = () => {
         <Card className="hover:shadow-md transition-all duration-300 border-none bg-white">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Disponible</p>
+              <p className="text-gray-600 text-xs font-bold uppercase tracking-wider">Disponible</p>
               <p className={`text-2xl font-black mt-1 ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {formatCurrency(saldo)}
               </p>
@@ -199,7 +199,7 @@ const DashboardPage = () => {
                 <span className={`text-xs font-bold ${saldo > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {formatPercentage(100 - porcentaje)}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">restante</span>
+                <span className="text-[10px] text-gray-600 ml-1">restante</span>
               </div>
             </div>
             <div className={`p-3 rounded-2xl shadow-sm ${saldo > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
@@ -211,11 +211,11 @@ const DashboardPage = () => {
         <Card className="hover:shadow-md transition-all duration-300 border-none bg-white">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Transacciones</p>
+              <p className="text-gray-600 text-xs font-bold uppercase tracking-wider">Transacciones</p>
               <p className="text-2xl font-black text-gray-900 mt-1">
                 {allExpenses.length}
               </p>
-              <p className="text-[10px] text-gray-400 mt-2 font-medium">Registros totales en sistema</p>
+              <p className="text-[10px] text-gray-600 mt-2 font-medium">Registros totales en sistema</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-2xl shadow-sm">
               <Receipt className="w-5 h-5 text-blue-600" />
@@ -230,7 +230,7 @@ const DashboardPage = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Progreso de Ejecución</h3>
-            <p className="text-xs text-gray-400">Distribución del presupuesto objetivo</p>
+            <p className="text-xs text-gray-600">Distribución del presupuesto objetivo</p>
           </div>
           <span className={`text-xl font-black ${porcentaje > 90 ? 'text-red-600' : 'text-emerald-600'}`}>
             {formatPercentage(porcentaje)}
@@ -244,7 +244,7 @@ const DashboardPage = () => {
             style={{ width: `${Math.min(porcentaje, 100)}%` }}
           />
         </div>
-        <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <div className="flex justify-between text-[10px] font-bold text-gray-600 uppercase tracking-widest">
           <span>Base 0 Bs</span>
           <span className="text-emerald-800">Limite: {formatCurrency(presupuesto)}</span>
         </div>
@@ -314,7 +314,7 @@ const DashboardPage = () => {
           <div className="px-6 py-4 border-b border-gray-50">
             <h3 className="font-bold text-gray-900">Distribución por Categoría</h3>
           </div>
-          <div className="relative w-full flex-1" style={{ minHeight: 300, minWidth: 0 }}>
+          <div className="relative w-full flex-1" style={{ height: 300, minWidth: 0 }}>
             {(gastosLoading || categoriasLoading) ? (
                <div className="h-full w-full flex items-center justify-center">
                  <div className="w-32 h-32 bg-gray-50 animate-pulse rounded-full" />
@@ -362,7 +362,7 @@ const DashboardPage = () => {
                       <p className="text-[10px] font-black text-gray-700 truncate leading-tight uppercase">
                         {cat.name}
                       </p>
-                      <p className="text-[9px] text-gray-400 font-bold leading-tight">
+                      <p className="text-[9px] text-gray-600 font-bold leading-tight">
                         {formatPercentage((cat.value / gastado) * 100)}
                       </p>
                     </div>
@@ -378,7 +378,7 @@ const DashboardPage = () => {
         <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">Últimos Movimientos</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Listado de las transacciones más recientes</p>
+            <p className="text-xs text-gray-600 mt-0.5">Listado de las transacciones más recientes</p>
           </div>
           <Receipt className="w-5 h-5 text-gray-200" />
         </div>
@@ -395,7 +395,7 @@ const DashboardPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors">
-                      <Receipt className="w-5 h-5 text-gray-400" />
+                      <Receipt className="w-5 h-5 text-gray-600" />
                     </div>
                     <div>
                       <p className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors uppercase tracking-tight">
@@ -405,7 +405,7 @@ const DashboardPage = () => {
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase">
                           {gasto.categoria_nombre}
                         </span>
-                        <span className="text-[10px] text-gray-400 font-medium">
+                        <span className="text-[10px] text-gray-600 font-medium">
                           {gasto.proveedor_nombre}
                         </span>
                       </div>
@@ -415,7 +415,7 @@ const DashboardPage = () => {
                     <p className="font-black text-gray-900 text-sm">
                       -{formatCurrency(gasto.monto)}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-bold mt-0.5">
+                    <p className="text-[10px] text-gray-600 font-bold mt-0.5">
                       {formatDateShort(gasto.fecha)}
                     </p>
                   </div>
@@ -425,7 +425,7 @@ const DashboardPage = () => {
           ) : (
             <div className="p-12 text-center">
               <Receipt className="w-12 h-12 text-gray-100 mx-auto mb-3" />
-              <p className="text-gray-400 font-medium italic">No se han registrado gastos aún</p>
+              <p className="text-gray-600 font-medium italic">No se han registrado gastos aún</p>
             </div>
           )}
         </div>

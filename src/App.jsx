@@ -2,11 +2,12 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProyectoProvider } from './context/ProyectoContext';
-import Layout from './components/layout/Layout';
 import { LoadingSpinner } from './components/common';
 
+const LoadingSpinnerWrapper = () => <LoadingSpinner />;
 // Páginas públicas
-import LoginPage from './modules/auth/pages/LoginPage';
+const LoginPage = lazy(() => import('./modules/auth/pages/LoginPage'));
+const Layout = lazy(() => import('./components/layout/Layout'));
 
 // Lazy loading de módulos
 // Finanzas
@@ -74,7 +75,9 @@ function AppContent() {
           path="/login" 
           element={
             <PublicRoute>
-              <LoginPage />
+              <Suspense fallback={<LoadingSpinnerWrapper />}>
+                <LoginPage />
+              </Suspense>
             </PublicRoute>
           } 
         />
@@ -85,7 +88,9 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <ProyectoProvider>
-                <Layout />
+                <Suspense fallback={<LoadingSpinnerWrapper />}>
+                  <Layout />
+                </Suspense>
               </ProyectoProvider>
             </ProtectedRoute>
           }

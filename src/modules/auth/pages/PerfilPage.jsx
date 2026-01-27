@@ -133,7 +133,7 @@ const PerfilPage = () => {
                 <p className="font-medium text-gray-900">Login con huella</p>
                 <p className="text-sm text-gray-500">Accede más rápido con biometría</p>
               </div>
-              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Próximamente</span>
+              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Próximamente</span>
             </button>
           )}
 
@@ -154,7 +154,7 @@ const PerfilPage = () => {
       </Card>
 
       {/* Info de la app */}
-      <div className="text-center text-sm text-gray-400">
+      <div className="text-center text-sm text-gray-600">
         <p>El Campo - Granja Avícola</p>
         <p>Versión 1.0.0</p>
       </div>

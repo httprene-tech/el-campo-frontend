@@ -55,7 +55,7 @@ const DocumentoRow = memo(({ doc, getFileIcon, onDelete, userId, onDownload }) =
             rel="noopener noreferrer"
             download
             onClick={onDownload}
-            className="p-2 hover:bg-emerald-50 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
+            className="p-2 hover:bg-emerald-50 rounded-lg text-gray-600 hover:text-emerald-600 transition-colors"
             style={{ touchAction: 'manipulation' }}
           >
             <Download className="w-5 h-5" />
@@ -64,7 +64,7 @@ const DocumentoRow = memo(({ doc, getFileIcon, onDelete, userId, onDownload }) =
         {onDelete && doc.subido_por === userId && (
           <button
             onClick={() => onDelete(doc.id)}
-            className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+            className="p-2 hover:bg-red-50 rounded-lg text-gray-600 hover:text-red-500 transition-colors"
             style={{ touchAction: 'manipulation' }}
           >
             <Trash2 className="w-5 h-5" />

@@ -128,7 +128,6 @@ const VacunacionesPage = () => {
         onClick={() => setModalOpen(true)}
         icon={Plus}
         label="Vacunación"
-        color="blue"
       />
 
       {/* BottomSheet Form */}

@@ -134,7 +134,7 @@ const BottomSheet = ({
             data-drag-handle
             className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
           >
-            <div className={`w-12 h-1.5 rounded-full transition-colors ${isDragging ? 'bg-gray-400' : 'bg-gray-300'}`} />
+            <div className={`w-12 h-1.5 rounded-full transition-colors ${isDragging ? 'bg-gray-600' : 'bg-gray-300'}`} />
           </div>
 
           {/* Header - también draggable */}

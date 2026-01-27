@@ -261,7 +261,7 @@ const Layout = () => {
                             }
                           `}
                         >
-                          <Icon className={`w-4 h-4 ${active ? '' : 'text-gray-400'}`} />
+                          <Icon className={`w-4 h-4 ${active ? '' : 'text-gray-600'}`} />
                           <span className="flex-1">{item.name}</span>
                           {active && <div className={`w-1 h-1 ${colors.dot} rounded-full`} />}
                         </NavLink>
@@ -297,7 +297,7 @@ const Layout = () => {
               </p>
               <p className="text-xs text-gray-500">Ver perfil</p>
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 -rotate-90 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronDown className="w-4 h-4 text-gray-600 -rotate-90 group-hover:translate-x-0.5 transition-transform" />
           </NavLink>
         </div>
       </aside>

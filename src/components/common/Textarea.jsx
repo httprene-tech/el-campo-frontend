@@ -41,7 +41,7 @@ const Textarea = ({
           }
           focus:outline-none focus:ring-2
           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-          placeholder:text-gray-400
+          placeholder:text-gray-600
           resize-none
         `}
         {...props}

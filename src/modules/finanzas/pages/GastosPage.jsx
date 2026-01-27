@@ -305,7 +305,7 @@ const GastosPage = () => {
                   <tr key={gasto.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <Calendar className="w-4 h-4 text-gray-600" />
                         <span className="text-sm text-gray-600">
                           {new Date(gasto.fecha).toLocaleDateString('es-BO')}
                         </span>
@@ -349,7 +349,7 @@ const GastosPage = () => {
                       {canRegister() && gasto.usuario === user?.user_id && (
                         <button
                           onClick={() => handleDelete(gasto.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+                          className="p-2 hover:bg-red-50 rounded-lg text-gray-600 hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -485,7 +485,7 @@ const GastosPage = () => {
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
-                <Camera className="w-5 h-5 text-gray-400" />
+                <Camera className="w-5 h-5 text-gray-600" />
                 <span className="text-sm text-gray-600">Tomar foto o subir imagen</span>
               </button>
             )}

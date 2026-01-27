@@ -101,7 +101,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-6">
           Sistema de Control Financiero y Gestión
         </p>
       </div>

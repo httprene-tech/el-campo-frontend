@@ -170,7 +170,7 @@ const InventarioPage = () => {
                         <p className={`text-lg font-bold ${stockBajo ? 'text-red-600' : 'text-gray-900'}`}>
                           {formatNumber(material.stock_actual, 0)}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600">
                           Mín: {formatNumber(material.stock_minimo_alerta, 0)}
                         </p>
                       </div>
@@ -229,7 +229,7 @@ const InventarioPage = () => {
                       <span className="text-sm text-gray-600">{mov.material_nombre}</span>
                     </div>
                     <div className="flex items-center justify-between pl-6">
-                      <p className="text-xs text-gray-400">{mov.tipo_display}</p>
+                      <p className="text-xs text-gray-600">{mov.tipo_display}</p>
                       {mov.nota && (
                         <p className="text-xs text-gray-500 truncate max-w-[150px]">{mov.nota}</p>
                       )}

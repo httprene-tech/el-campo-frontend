@@ -366,7 +366,7 @@ const DocumentosPage = () => {
                 <div>
                   <Upload className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">Click para seleccionar archivo</p>
-                  <p className="text-xs text-gray-400">PDF, DOC, XLS, IMG</p>
+                  <p className="text-xs text-gray-600">PDF, DOC, XLS, IMG</p>
                 </div>
               )}
               <input
