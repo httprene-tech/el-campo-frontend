@@ -261,11 +261,11 @@ const DashboardPage = () => {
               <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Inversión Bs</span>
             </div>
           </div>
-          <div className="relative w-full" style={{ height: 320 }}>
+          <div className="relative w-full overflow-hidden" style={{ minHeight: 320 }}>
             {resumenLoading ? (
-               <div className="h-full w-full bg-gray-50 animate-pulse" />
+               <div className="h-80 w-full bg-gray-50 animate-pulse" />
             ) : datosAreaChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={320} debounce={50}>
                 <AreaChart data={datosAreaChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -314,13 +314,13 @@ const DashboardPage = () => {
           <div className="px-6 py-4 border-b border-gray-50">
             <h3 className="font-bold text-gray-900">Distribución por Categoría</h3>
           </div>
-          <div className="relative w-full flex-1" style={{ height: 300, minWidth: 0 }}>
+          <div className="relative w-full overflow-hidden" style={{ minHeight: 300 }}>
             {(gastosLoading || categoriasLoading) ? (
                <div className="h-full w-full flex items-center justify-center">
                  <div className="w-32 h-32 bg-gray-50 animate-pulse rounded-full" />
                </div>
             ) : datosCategorias.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300} debounce={50}>
                 <PieChart>
                   <Pie
                     data={datosCategorias}
